@@ -6,6 +6,7 @@ export const timers = sqliteTable('timers', {
   type: text('type', {
     enum: ['countdown', 'elapsed', 'countdown-elapsed', 'stamina', 'periodic-increment'],
   }).notNull(),
+  tags: text('tags'), // JSON array of tag strings
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   // countdown, countdown-elapsed

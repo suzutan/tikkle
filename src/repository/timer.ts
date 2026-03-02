@@ -10,6 +10,7 @@ function toTimer(row: TimerRow): Timer {
   const base = {
     id: row.id,
     name: row.name,
+    tags: row.tags ? JSON.parse(row.tags) : undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -46,7 +47,14 @@ function toTimer(row: TimerRow): Timer {
 }
 
 function toInsertValues(input: CreateTimerInput, id: string, now: string): TimerInsert {
-  const base = { id, name: input.name, type: input.type, createdAt: now, updatedAt: now };
+  const base = {
+    id,
+    name: input.name,
+    type: input.type,
+    tags: input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : null,
+    createdAt: now,
+    updatedAt: now
+  };
 
   switch (input.type) {
     case 'countdown':
@@ -111,6 +119,9 @@ export class D1TimerRepository {
     const updateValues: Partial<TimerInsert> = { updatedAt: now };
 
     if (input.name !== undefined) updateValues.name = input.name;
+    if (input.tags !== undefined) {
+      updateValues.tags = input.tags.length > 0 ? JSON.stringify(input.tags) : null;
+    }
 
     switch (input.type) {
       case 'countdown':

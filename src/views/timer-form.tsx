@@ -60,6 +60,18 @@ export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] 
           />
         </div>
 
+        <div class="mb-4">
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">タグ（オプション）</label>
+          <input
+            type="text"
+            name="tags"
+            value={timer?.tags ? timer.tags.join(', ') : ''}
+            placeholder="例: 仕事, 重要, プロジェクトA"
+            class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          />
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">カンマ区切りで複数のタグを入力できます</p>
+        </div>
+
         {/* countdown / countdown-elapsed */}
         <div x-show="type === 'countdown' || type === 'countdown-elapsed'" class="mb-4">
           <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">目標日時</label>

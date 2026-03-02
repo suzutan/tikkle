@@ -21,11 +21,15 @@ app.get('/', async (c) => {
   const repo = new D1TimerRepository(c.env.DB);
   const timers = await repo.getAll();
 
+  // Extract all unique tags from timers
+  const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
+
   return c.render(
-    <div x-data="{ viewMode: localStorage.getItem('viewMode') || 'card' }">
-      <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">タイマー一覧</h1>
-        <div class="flex gap-2">
+    <div x-data="{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: '', filterTags: [] }">
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">タイマー一覧</h1>
+          <div class="flex gap-2">
           {/* View toggle */}
           <div class="flex rounded-lg border border-gray-300 dark:border-gray-600">
             <button
@@ -56,21 +60,97 @@ app.get('/', async (c) => {
           >
             新規作成
           </a>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div class="flex flex-wrap gap-3 rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
+          <div class="flex-1 min-w-[200px]">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">種別でフィルター</label>
+            <select
+              x-model="filterType"
+              class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            >
+              <option value="">すべて</option>
+              <option value="countdown">カウントダウン</option>
+              <option value="elapsed">経過時間</option>
+              <option value="countdown-elapsed">カウントダウン→経過</option>
+              <option value="stamina">スタミナ回復</option>
+              <option value="periodic-increment">定期増加+上限</option>
+            </select>
+          </div>
+
+          {allTags.length > 0 && (
+            <div class="flex-1 min-w-[200px]">
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">タグでフィルター</label>
+              <div class="flex flex-wrap gap-1.5">
+                {allTags.map((tag) => (
+                  <button
+                    type="button"
+                    x-on:click={`filterTags.includes('${tag}') ? filterTags = filterTags.filter(t => t !== '${tag}') : filterTags.push('${tag}')`}
+                    x-bind:class={`filterTags.includes('${tag}') ? 'bg-blue-600 text-white dark:bg-blue-500' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'`}
+                    class="rounded-full px-3 py-1 text-xs font-medium transition-colors border border-gray-300 dark:border-gray-600"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div class="flex items-end">
+            <button
+              type="button"
+              x-on:click="filterType = ''; filterTags = []"
+              class="rounded bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500"
+            >
+              フィルターをクリア
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Card view */}
       <div x-show="viewMode === 'card'" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" id="timer-list">
-        {timers.length === 0
-          ? <TimerCardEmpty />
-          : timers.map((timer) => <TimerCard timer={timer} />)}
+        {timers.length === 0 && <TimerCardEmpty />}
+        {timers.map((timer) => {
+          const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
+          const timerType = timer.type;
+          const timerTags = JSON.stringify(timer.tags || []).replace(/</g, '\\u003c');
+          return (
+            <div
+              x-show={`(() => {
+                const timer = ${timerJson};
+                if (filterType && timer.type !== filterType) return false;
+                if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
+                return true;
+              })()`}
+              x-data="{ timer: ${timerJson} }"
+            >
+              <TimerCard timer={timer} />
+            </div>
+          );
+        })}
       </div>
 
       {/* List view */}
       <div x-show="viewMode === 'list'" class="space-y-2" id="timer-list-compact">
-        {timers.length === 0
-          ? <TimerCardEmpty />
-          : timers.map((timer) => <TimerListItem timer={timer} />)}
+        {timers.length === 0 && <TimerCardEmpty />}
+        {timers.map((timer) => {
+          const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
+          return (
+            <div
+              x-show={`(() => {
+                const timer = ${timerJson};
+                if (filterType && timer.type !== filterType) return false;
+                if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
+                return true;
+              })()`}
+            >
+              <TimerListItem timer={timer} />
+            </div>
+          );
+        })}
       </div>
     </div>,
   );
@@ -98,14 +178,18 @@ app.get('/timers/:id/edit', async (c) => {
 function parseFormToInput(body: Record<string, string>): CreateTimerInput {
   const type = body.type;
   const name = body.name;
+  // Parse tags: split by comma, trim, and filter out empty strings
+  const tags = body.tags
+    ? body.tags.split(',').map(t => t.trim()).filter(t => t.length > 0)
+    : undefined;
 
   switch (type) {
     case 'countdown':
-      return { name, type, targetDate: datetimeLocalToISO(body.targetDate) };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags };
     case 'elapsed':
-      return { name, type, startDate: datetimeLocalToISO(body.startDate) };
+      return { name, type, startDate: datetimeLocalToISO(body.startDate), tags };
     case 'countdown-elapsed':
-      return { name, type, targetDate: datetimeLocalToISO(body.targetDate) };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags };
     case 'stamina': {
       // Calculate total seconds from minutes and seconds inputs
       const minutes = Number(body.recoveryIntervalMinutes) || 0;
@@ -119,6 +203,7 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
         recoveryIntervalMinutes: minutes, // Keep for backwards compatibility
         recoveryIntervalSeconds: totalSeconds,
         lastUpdatedAt: new Date().toISOString(),
+        tags,
       };
     }
     case 'periodic-increment':
@@ -130,6 +215,7 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
         incrementAmount: Number(body.incrementAmount),
         scheduleTimes: body.scheduleTimes.split(',').map((s) => s.trim()),
         lastUpdatedAt: new Date().toISOString(),
+        tags,
       };
     default:
       throw new Error(`Unknown type: ${type}`);
