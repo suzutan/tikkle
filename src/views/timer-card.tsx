@@ -47,6 +47,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
           </div>
         </div>
         <p x-show="subtext" x-text="subtext" class="mt-1 text-sm text-gray-500"></p>
+        <p x-show="targetTime" x-text="targetTime" class="mt-1 text-xs text-gray-400"></p>
       </div>
     </div>
   );

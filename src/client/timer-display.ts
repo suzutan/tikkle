@@ -1,10 +1,11 @@
 import { computeTimerState } from '../domain/timer/compute';
-import { formatDuration, formatFraction } from '../domain/timer/format';
+import { formatDuration, formatFraction, formatDateTime, formatTime } from '../domain/timer/format';
 import type { Timer } from '../domain/timer/types';
 
 interface TimerDisplayData {
   display: string;
   subtext: string;
+  targetTime: string;
   percentage: number;
   expired: boolean;
   init(): void;
@@ -30,6 +31,7 @@ window.timerDisplay = function (json: string): TimerDisplayData {
   return {
     display: '',
     subtext: '',
+    targetTime: '',
     percentage: -1,
     expired: false,
 
@@ -44,24 +46,50 @@ window.timerDisplay = function (json: string): TimerDisplayData {
         case 'countdown':
           this.display = state.isExpired ? '期限切れ' : formatDuration(state.remainingMs);
           this.expired = state.isExpired;
+          if (timer.type === 'countdown') {
+            this.targetTime = `目標: ${formatDateTime(timer.targetDate)}`;
+          }
           break;
         case 'elapsed':
           this.display = formatDuration(state.elapsedMs);
+          if (timer.type === 'elapsed') {
+            this.targetTime = `開始: ${formatDateTime(timer.startDate)}`;
+          }
           break;
         case 'countdown-elapsed':
           this.display = formatDuration(state.ms);
           this.subtext = state.mode === 'countdown' ? '残り' : '超過';
+          if (timer.type === 'countdown-elapsed') {
+            this.targetTime = `目標: ${formatDateTime(timer.targetDate)}`;
+          }
           break;
-        case 'stamina':
+        case 'stamina': {
           this.display = formatFraction(state.currentValue, state.maxValue);
           this.percentage = (state.currentValue / state.maxValue) * 100;
           this.subtext = state.isFull ? '' : `次の回復: ${formatDuration(state.nextRecoveryMs)}`;
+
+          // 完全回復予定時刻を計算
+          if (!state.isFull && state.timeToFullMs > 0) {
+            const fullRecoveryDate = new Date(Date.now() + state.timeToFullMs);
+            this.targetTime = `完全回復: ${formatTime(fullRecoveryDate.toISOString())}`;
+          } else {
+            this.targetTime = '完全回復済み';
+          }
           break;
-        case 'periodic-increment':
+        }
+        case 'periodic-increment': {
           this.display = formatFraction(state.currentValue, state.maxValue);
           this.percentage = (state.currentValue / state.maxValue) * 100;
           this.subtext = state.isAtMax ? '' : `全回復まで: ${formatDuration(state.timeToMaxMs)}`;
+
+          // 次回増加時刻と上限到達予定時刻を表示
+          if (state.nextIncrementAt) {
+            this.targetTime = `次回: ${formatTime(state.nextIncrementAt.toISOString())}`;
+          } else {
+            this.targetTime = '上限到達';
+          }
           break;
+        }
       }
     },
   };

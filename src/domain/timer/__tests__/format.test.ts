@@ -3,6 +3,8 @@ import {
   formatDuration,
   formatDurationCompact,
   formatFraction,
+  formatDateTime,
+  formatTime,
 } from '../format';
 
 describe('formatDuration', () => {
@@ -189,5 +191,53 @@ describe('formatFraction', () => {
 
     // Then
     expect(result).toBe('100 / 100');
+  });
+});
+
+describe('formatDateTime', () => {
+  test('should format ISO string to local datetime', () => {
+    // Given: 2026-03-03T15:30:00+09:00 (JST)
+    const isoString = '2026-03-03T15:30:00+09:00';
+
+    // When
+    const result = formatDateTime(isoString);
+
+    // Then: ローカル時間でフォーマット（JSTで実行時）
+    expect(result).toMatch(/2026-03-03 \d{2}:\d{2}/);
+  });
+
+  test('should pad single-digit values', () => {
+    // Given: 2026-01-05T09:05:00+09:00
+    const isoString = '2026-01-05T09:05:00+09:00';
+
+    // When
+    const result = formatDateTime(isoString);
+
+    // Then
+    expect(result).toMatch(/2026-01-05 \d{2}:\d{2}/);
+  });
+});
+
+describe('formatTime', () => {
+  test('should format ISO string to time only', () => {
+    // Given: 2026-03-03T15:30:00+09:00
+    const isoString = '2026-03-03T15:30:00+09:00';
+
+    // When
+    const result = formatTime(isoString);
+
+    // Then: 時刻のみ
+    expect(result).toMatch(/\d{2}:\d{2}/);
+  });
+
+  test('should pad single-digit hours and minutes', () => {
+    // Given: 2026-01-05T09:05:00+09:00
+    const isoString = '2026-01-05T09:05:00+09:00';
+
+    // When
+    const result = formatTime(isoString);
+
+    // Then
+    expect(result).toMatch(/\d{2}:\d{2}/);
   });
 });
