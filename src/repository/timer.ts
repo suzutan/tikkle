@@ -1,0 +1,148 @@
+import { eq, desc } from 'drizzle-orm';
+import { drizzle, DrizzleD1Database } from 'drizzle-orm/d1';
+import { timers } from '../db/schema';
+import type { Timer, CreateTimerInput, UpdateTimerInput } from '../domain/timer/types';
+
+type TimerRow = typeof timers.$inferSelect;
+type TimerInsert = typeof timers.$inferInsert;
+
+function toTimer(row: TimerRow): Timer {
+  const base = {
+    id: row.id,
+    name: row.name,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+
+  switch (row.type) {
+    case 'countdown':
+      return { ...base, type: 'countdown', targetDate: row.targetDate! };
+    case 'elapsed':
+      return { ...base, type: 'elapsed', startDate: row.startDate! };
+    case 'countdown-elapsed':
+      return { ...base, type: 'countdown-elapsed', targetDate: row.targetDate! };
+    case 'stamina':
+      return {
+        ...base,
+        type: 'stamina',
+        currentValue: row.currentValue!,
+        maxValue: row.maxValue!,
+        recoveryIntervalMinutes: row.recoveryIntervalMinutes!,
+        lastUpdatedAt: row.lastUpdatedAt!,
+      };
+    case 'periodic-increment':
+      return {
+        ...base,
+        type: 'periodic-increment',
+        currentValue: row.currentValue!,
+        maxValue: row.maxValue!,
+        incrementAmount: row.incrementAmount!,
+        scheduleTimes: JSON.parse(row.scheduleTimes!),
+        lastUpdatedAt: row.lastUpdatedAt!,
+      };
+    default:
+      throw new Error(`Unknown timer type: ${row.type}`);
+  }
+}
+
+function toInsertValues(input: CreateTimerInput, id: string, now: string): TimerInsert {
+  const base = { id, name: input.name, type: input.type, createdAt: now, updatedAt: now };
+
+  switch (input.type) {
+    case 'countdown':
+      return { ...base, targetDate: input.targetDate };
+    case 'elapsed':
+      return { ...base, startDate: input.startDate };
+    case 'countdown-elapsed':
+      return { ...base, targetDate: input.targetDate };
+    case 'stamina':
+      return {
+        ...base,
+        currentValue: input.currentValue,
+        maxValue: input.maxValue,
+        recoveryIntervalMinutes: input.recoveryIntervalMinutes,
+        lastUpdatedAt: input.lastUpdatedAt,
+      };
+    case 'periodic-increment':
+      return {
+        ...base,
+        currentValue: input.currentValue,
+        maxValue: input.maxValue,
+        incrementAmount: input.incrementAmount,
+        scheduleTimes: JSON.stringify(input.scheduleTimes),
+        lastUpdatedAt: input.lastUpdatedAt,
+      };
+  }
+}
+
+export class D1TimerRepository {
+  private db: DrizzleD1Database;
+
+  constructor(d1: D1Database) {
+    this.db = drizzle(d1);
+  }
+
+  async getAll(): Promise<Timer[]> {
+    const rows = await this.db.select().from(timers).orderBy(desc(timers.createdAt));
+    return rows.map(toTimer);
+  }
+
+  async getById(id: string): Promise<Timer | undefined> {
+    const rows = await this.db.select().from(timers).where(eq(timers.id, id)).limit(1);
+    return rows.length > 0 ? toTimer(rows[0]) : undefined;
+  }
+
+  async create(input: CreateTimerInput): Promise<Timer> {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const values = toInsertValues(input, id, now);
+    await this.db.insert(timers).values(values);
+    return (await this.getById(id))!;
+  }
+
+  async update(id: string, input: UpdateTimerInput): Promise<Timer> {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error(`Timer not found: ${id}`);
+    if (existing.type !== input.type) {
+      throw new Error(`Timer type mismatch: expected '${existing.type}', got '${input.type}'`);
+    }
+
+    const now = new Date().toISOString();
+    const updateValues: Partial<TimerInsert> = { updatedAt: now };
+
+    if (input.name !== undefined) updateValues.name = input.name;
+
+    switch (input.type) {
+      case 'countdown':
+        if (input.targetDate !== undefined) updateValues.targetDate = input.targetDate;
+        break;
+      case 'elapsed':
+        if (input.startDate !== undefined) updateValues.startDate = input.startDate;
+        break;
+      case 'countdown-elapsed':
+        if (input.targetDate !== undefined) updateValues.targetDate = input.targetDate;
+        break;
+      case 'stamina':
+        if (input.currentValue !== undefined) updateValues.currentValue = input.currentValue;
+        if (input.maxValue !== undefined) updateValues.maxValue = input.maxValue;
+        if (input.recoveryIntervalMinutes !== undefined) updateValues.recoveryIntervalMinutes = input.recoveryIntervalMinutes;
+        if (input.lastUpdatedAt !== undefined) updateValues.lastUpdatedAt = input.lastUpdatedAt;
+        break;
+      case 'periodic-increment':
+        if (input.currentValue !== undefined) updateValues.currentValue = input.currentValue;
+        if (input.maxValue !== undefined) updateValues.maxValue = input.maxValue;
+        if (input.incrementAmount !== undefined) updateValues.incrementAmount = input.incrementAmount;
+        if (input.scheduleTimes !== undefined) updateValues.scheduleTimes = JSON.stringify(input.scheduleTimes);
+        if (input.lastUpdatedAt !== undefined) updateValues.lastUpdatedAt = input.lastUpdatedAt;
+        break;
+    }
+
+    await this.db.update(timers).set(updateValues).where(eq(timers.id, id));
+    return (await this.getById(id))!;
+  }
+
+  async delete(id: string): Promise<void> {
+    const result = await this.db.delete(timers).where(eq(timers.id, id)).returning();
+    if (result.length === 0) throw new Error(`Timer not found: ${id}`);
+  }
+}

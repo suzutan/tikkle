@@ -1,0 +1,9 @@
+/// <reference types="@cloudflare/workers-types" />
+
+import 'hono';
+
+declare module 'hono' {
+  interface ContextRenderer {
+    (content: string | Promise<string>, props?: { title?: string }): Response | Promise<Response>;
+  }
+}
