@@ -14,6 +14,7 @@ interface TypeSpecificFieldsProps {
 export function TypeSpecificFields({ formData, onChange }: TypeSpecificFieldsProps) {
   switch (formData.type) {
     case 'countdown':
+    case 'countdown-elapsed':
       return (
         <div>
           <Label className="mb-2 block">目標日時</Label>
@@ -36,20 +37,6 @@ export function TypeSpecificFields({ formData, onChange }: TypeSpecificFieldsPro
             value={formData.startDate.slice(0, 16)}
             onChange={(e) =>
               onChange({ ...formData, startDate: new Date(e.target.value).toISOString() })
-            }
-            required
-          />
-        </div>
-      );
-    case 'countdown-elapsed':
-      return (
-        <div>
-          <Label className="mb-2 block">目標日時</Label>
-          <Input
-            type="datetime-local"
-            value={formData.targetDate.slice(0, 16)}
-            onChange={(e) =>
-              onChange({ ...formData, targetDate: new Date(e.target.value).toISOString() })
             }
             required
           />

@@ -65,17 +65,18 @@ function PeriodicIncrementDisplay({ state }: { state: Extract<TimerState, { type
   );
 }
 
-const STATE_RENDERERS: Record<TimerState['type'], React.ComponentType<{ state: never }>> = {
-  'countdown': CountdownDisplay as React.ComponentType<{ state: never }>,
-  'elapsed': ElapsedDisplay as React.ComponentType<{ state: never }>,
-  'countdown-elapsed': CountdownElapsedDisplay as React.ComponentType<{ state: never }>,
-  'stamina': StaminaDisplay as React.ComponentType<{ state: never }>,
-  'periodic-increment': PeriodicIncrementDisplay as React.ComponentType<{ state: never }>,
-};
-
 export function TimerStateDisplay({ timer }: { timer: Timer }) {
   const state = useTimerState(timer);
-  const Renderer = STATE_RENDERERS[state.type];
-
-  return <Renderer state={state as never} />;
+  switch (state.type) {
+    case 'countdown':
+      return <CountdownDisplay state={state} />;
+    case 'elapsed':
+      return <ElapsedDisplay state={state} />;
+    case 'countdown-elapsed':
+      return <CountdownElapsedDisplay state={state} />;
+    case 'stamina':
+      return <StaminaDisplay state={state} />;
+    case 'periodic-increment':
+      return <PeriodicIncrementDisplay state={state} />;
+  }
 }
