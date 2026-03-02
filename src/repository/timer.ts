@@ -6,7 +6,7 @@ import type { Timer, CreateTimerInput, UpdateTimerInput } from '../domain/timer/
 type TimerRow = typeof timers.$inferSelect;
 type TimerInsert = typeof timers.$inferInsert;
 
-function toTimer(row: TimerRow): Timer {
+export function toTimer(row: TimerRow): Timer {
   const base = {
     id: row.id,
     name: row.name,
@@ -46,7 +46,7 @@ function toTimer(row: TimerRow): Timer {
   }
 }
 
-function toInsertValues(input: CreateTimerInput, id: string, now: string): TimerInsert {
+export function toInsertValues(input: CreateTimerInput, id: string, now: string): TimerInsert {
   const base = {
     id,
     name: input.name,
