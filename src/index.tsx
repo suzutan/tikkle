@@ -59,17 +59,22 @@ app.get('/timers/:id/edit', async (c) => {
 
 // --- API ---
 
+/** datetime-local の値を JST として解釈し UTC ISO 文字列に変換 */
+function datetimeLocalToISO(value: string): string {
+  return new Date(value + '+09:00').toISOString();
+}
+
 function parseFormToInput(body: Record<string, string>): CreateTimerInput {
   const type = body.type;
   const name = body.name;
 
   switch (type) {
     case 'countdown':
-      return { name, type, targetDate: new Date(body.targetDate).toISOString() };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate) };
     case 'elapsed':
-      return { name, type, startDate: new Date(body.startDate).toISOString() };
+      return { name, type, startDate: datetimeLocalToISO(body.startDate) };
     case 'countdown-elapsed':
-      return { name, type, targetDate: new Date(body.targetDate).toISOString() };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate) };
     case 'stamina':
       return {
         name,

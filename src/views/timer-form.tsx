@@ -2,6 +2,13 @@ import type { Timer } from '../domain/timer/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
 
 const TIMER_TYPES = Object.keys(TIMER_TYPE_LABELS) as Array<keyof typeof TIMER_TYPE_LABELS>;
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** UTC ISO 文字列を JST の datetime-local 値に変換 */
+function toDatetimeLocalJST(iso: string): string {
+  const jst = new Date(new Date(iso).getTime() + JST_OFFSET_MS);
+  return jst.toISOString().slice(0, 16);
+}
 
 export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] }) {
   const isEdit = !!timer;
@@ -65,7 +72,7 @@ export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] 
           <input
             type="datetime-local"
             name="targetDate"
-            value={timer && ('targetDate' in timer) ? timer.targetDate.slice(0, 16) : ''}
+            value={timer && ('targetDate' in timer) ? toDatetimeLocalJST(timer.targetDate) : ''}
             class="w-full rounded border border-gray-300 px-3 py-2"
           />
         </div>
@@ -76,7 +83,7 @@ export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] 
           <input
             type="datetime-local"
             name="startDate"
-            value={timer && ('startDate' in timer) ? timer.startDate.slice(0, 16) : ''}
+            value={timer && ('startDate' in timer) ? toDatetimeLocalJST(timer.startDate) : ''}
             class="w-full rounded border border-gray-300 px-3 py-2"
           />
         </div>
