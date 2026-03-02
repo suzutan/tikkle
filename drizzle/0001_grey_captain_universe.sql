@@ -1,0 +1,1 @@
+ALTER TABLE `timers` ADD `recovery_interval_seconds` real;

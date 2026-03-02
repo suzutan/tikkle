@@ -109,16 +109,34 @@ export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] 
         </div>
 
         {/* stamina specific */}
-        <div x-show="type === 'stamina'" class="mb-4">
-          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">回復間隔（分）</label>
-          <input
-            type="number"
-            name="recoveryIntervalMinutes"
-            value={timer && ('recoveryIntervalMinutes' in timer) ? String(timer.recoveryIntervalMinutes) : '5'}
-            min="0.1"
-            step="0.1"
-            class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-          />
+        <div x-show="type === 'stamina'">
+          <div class="mb-4">
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">回復間隔</label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="mb-1 block text-xs text-gray-600 dark:text-gray-400">分</label>
+                <input
+                  type="number"
+                  name="recoveryIntervalMinutes"
+                  value={timer && ('recoveryIntervalSeconds' in timer) && timer.recoveryIntervalSeconds ? String(Math.floor(timer.recoveryIntervalSeconds / 60)) : (timer && ('recoveryIntervalMinutes' in timer) ? String(Math.floor(timer.recoveryIntervalMinutes)) : '5')}
+                  min="0"
+                  class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs text-gray-600 dark:text-gray-400">秒</label>
+                <input
+                  type="number"
+                  name="recoveryIntervalSeconds"
+                  value={timer && ('recoveryIntervalSeconds' in timer) && timer.recoveryIntervalSeconds ? String(Math.floor(timer.recoveryIntervalSeconds % 60)) : '0'}
+                  min="0"
+                  max="59"
+                  class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                />
+              </div>
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">例: 7分12秒の場合は、分=7、秒=12と入力</p>
+          </div>
         </div>
 
         {/* periodic-increment specific */}

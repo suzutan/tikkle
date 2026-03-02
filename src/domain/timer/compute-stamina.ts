@@ -5,7 +5,9 @@ export function computeStamina(
   now: Date,
 ): StaminaState {
   const elapsedMs = now.getTime() - new Date(timer.lastUpdatedAt).getTime();
-  const intervalMs = timer.recoveryIntervalMinutes * 60 * 1000;
+  // Use recoveryIntervalSeconds if available, otherwise fall back to recoveryIntervalMinutes
+  const intervalSeconds = timer.recoveryIntervalSeconds ?? (timer.recoveryIntervalMinutes * 60);
+  const intervalMs = intervalSeconds * 1000;
 
   const recoveries = Math.floor(elapsedMs / intervalMs);
   const currentValue = Math.min(
