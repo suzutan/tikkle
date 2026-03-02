@@ -42,25 +42,46 @@ window.timerDisplay = function (json: string): TimerDisplayData {
 
     update() {
       const state = computeTimerState(timer, new Date());
+      const now = Date.now();
+
       switch (state.type) {
         case 'countdown':
           this.display = state.isExpired ? '期限切れ' : formatDuration(state.remainingMs);
           this.expired = state.isExpired;
           if (timer.type === 'countdown') {
             this.targetTime = `目標: ${formatDateTime(timer.targetDate)}`;
+            // Calculate progress: assume countdown started 7 days before target
+            const targetMs = new Date(timer.targetDate).getTime();
+            const totalDuration = 7 * 24 * 60 * 60 * 1000; // 7 days
+            const elapsed = totalDuration - state.remainingMs;
+            this.percentage = state.isExpired ? 0 : Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
           }
           break;
         case 'elapsed':
           this.display = formatDuration(state.elapsedMs);
           if (timer.type === 'elapsed') {
             this.targetTime = `開始: ${formatDateTime(timer.startDate)}`;
+            // For elapsed timers, show progress towards 24 hours
+            const hoursElapsed = state.elapsedMs / (60 * 60 * 1000);
+            this.percentage = Math.min(100, (hoursElapsed / 24) * 100);
           }
           break;
         case 'countdown-elapsed':
           this.display = formatDuration(state.ms);
           this.subtext = state.mode === 'countdown' ? '残り' : '超過';
+          this.expired = state.mode === 'elapsed';
           if (timer.type === 'countdown-elapsed') {
             this.targetTime = `目標: ${formatDateTime(timer.targetDate)}`;
+            const targetMs = new Date(timer.targetDate).getTime();
+            if (state.mode === 'countdown') {
+              // Countdown mode: show remaining time as progress
+              const totalDuration = 7 * 24 * 60 * 60 * 1000; // 7 days
+              const elapsed = totalDuration - state.ms;
+              this.percentage = Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
+            } else {
+              // Elapsed mode: show how long it's been overdue
+              this.percentage = 0;
+            }
           }
           break;
         case 'stamina': {
@@ -70,7 +91,7 @@ window.timerDisplay = function (json: string): TimerDisplayData {
 
           // 完全回復予定時刻を計算
           if (!state.isFull && state.timeToFullMs > 0) {
-            const fullRecoveryDate = new Date(Date.now() + state.timeToFullMs);
+            const fullRecoveryDate = new Date(now + state.timeToFullMs);
             this.targetTime = `完全回復: ${formatTime(fullRecoveryDate.toISOString())}`;
           } else {
             this.targetTime = '完全回復済み';

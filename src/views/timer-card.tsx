@@ -5,46 +5,71 @@ export function TimerCard({ timer }: { timer: Timer }) {
   const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
 
   return (
-    <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800" x-data="{ showDeleteModal: false }">
-      <div class="flex items-start justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{timer.name}</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">{TIMER_TYPE_LABELS[timer.type]}</p>
+    <div class="group rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:from-gray-800 dark:to-gray-900" x-data="{ showDeleteModal: false }">
+      <div class="mb-4 flex items-start justify-between">
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{timer.name}</h3>
+          <p class="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">{TIMER_TYPE_LABELS[timer.type]}</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           <a
             href={`/timers/${timer.id}/edit`}
-            class="rounded bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            class="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             編集
           </a>
           <button
             x-on:click="showDeleteModal = true"
-            class="rounded bg-red-50 px-3 py-1 text-sm text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+            class="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
           >
             削除
           </button>
         </div>
       </div>
       <div
-        class="mt-3"
+        class="flex items-center gap-6"
         x-data={`timerDisplay('${timerJson}')`}
       >
-        <p
-          class="text-2xl font-mono"
-          x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
-          x-text="display"
-        ></p>
-        <div x-show="percentage >= 0" class="mt-2">
-          <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-            <div
-              class="h-2 rounded-full bg-blue-500 dark:bg-blue-400 transition-all"
-              x-bind:style="`width: ${percentage}%`"
-            ></div>
+        {/* Circular progress indicator */}
+        <div class="relative flex h-32 w-32 flex-shrink-0 items-center justify-center" x-show="percentage >= 0">
+          <svg class="h-full w-full -rotate-90 transform">
+            <circle
+              cx="64"
+              cy="64"
+              r="56"
+              stroke="currentColor"
+              stroke-width="8"
+              fill="none"
+              class="text-gray-200 dark:text-gray-700"
+            />
+            <circle
+              cx="64"
+              cy="64"
+              r="56"
+              stroke="currentColor"
+              stroke-width="8"
+              fill="none"
+              stroke-linecap="round"
+              class="transition-all duration-1000 ease-linear"
+              x-bind:class="expired ? 'text-red-500 dark:text-red-400' : percentage > 80 ? 'text-green-500 dark:text-green-400' : percentage > 50 ? 'text-blue-500 dark:text-blue-400' : percentage > 20 ? 'text-yellow-500 dark:text-yellow-400' : 'text-orange-500 dark:text-orange-400'"
+              x-bind:style="`stroke-dasharray: ${2 * Math.PI * 56}; stroke-dashoffset: ${2 * Math.PI * 56 * (1 - percentage / 100)}`"
+            />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <span class="text-2xl font-bold" x-text="`${Math.round(percentage)}%`" x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"></span>
           </div>
         </div>
-        <p x-show="subtext" x-text="subtext" class="mt-1 text-sm text-gray-500 dark:text-gray-400"></p>
-        <p x-show="targetTime" x-text="targetTime" class="mt-1 text-xs text-gray-400 dark:text-gray-500"></p>
+
+        {/* Timer display */}
+        <div class="flex-1 space-y-2">
+          <p
+            class="text-3xl font-bold tabular-nums leading-none"
+            x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
+            x-text="display"
+          ></p>
+          <p x-show="subtext" x-text="subtext" class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"></p>
+          <p x-show="targetTime" x-text="targetTime" class="text-xs text-gray-400 dark:text-gray-500"></p>
+        </div>
       </div>
 
       <div
