@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
 
+env:
+  D1_PRODUCTION_ID: 16ebeaf9-8c7d-4315-9f9f-0f547ce17edc
+  D1_PREVIEW_ID: e976992b-2f9c-4b3c-85df-d2b547f4781f
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -33,6 +37,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+
+      - name: Migrate D1 (production)
+        if: github.ref == 'refs/heads/master'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply tikkle-db --remote
+
+      - name: Migrate D1 (preview)
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute --remote tikkle-db-preview --file=drizzle/0000_foamy_drax.sql
 
       - name: Deploy to Cloudflare Pages
         id: deploy
