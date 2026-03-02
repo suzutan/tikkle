@@ -52,7 +52,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute --remote tikkle-db-preview --file=drizzle/0000_foamy_drax.sql
+          command: d1 migrations apply tikkle-db-preview --remote
 
       - name: Deploy to Cloudflare Pages
         id: deploy
