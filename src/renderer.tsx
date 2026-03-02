@@ -11,6 +11,7 @@ export const renderer = jsxRenderer(({ children, title }) => {
         <script src="https://unpkg.com/htmx.org@2.0.4" />
         <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" />
         <script src="/static/client.js" />
+        <style>{`[x-cloak] { display: none !important; }`}</style>
       </head>
       <body class="min-h-screen bg-gray-50">
         <div class="mx-auto max-w-2xl px-4 py-8">
