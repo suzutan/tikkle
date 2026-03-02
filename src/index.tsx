@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { renderer } from './renderer';
 import { D1TimerRepository } from './repository/timer';
 import { createTimerSchema } from './domain/timer/validation';
+import { datetimeLocalToISO } from './lib/timezone';
 import { TimerCard, TimerCardEmpty } from './views/timer-card';
 import { TimerForm } from './views/timer-form';
 import type { CreateTimerInput } from './domain/timer/types';
@@ -58,11 +59,6 @@ app.get('/timers/:id/edit', async (c) => {
 });
 
 // --- API ---
-
-/** datetime-local の値を JST として解釈し UTC ISO 文字列に変換 */
-function datetimeLocalToISO(value: string): string {
-  return new Date(value + '+09:00').toISOString();
-}
 
 function parseFormToInput(body: Record<string, string>): CreateTimerInput {
   const type = body.type;
