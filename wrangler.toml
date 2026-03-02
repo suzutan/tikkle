@@ -5,5 +5,5 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "tikkle-db"
-database_id = "placeholder-replace-after-d1-create"
+database_id = "16ebeaf9-8c7d-4315-9f9f-0f547ce17edc"
 migrations_dir = "drizzle"
