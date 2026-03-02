@@ -24,10 +24,10 @@ app.get('/', async (c) => {
   return c.render(
     <div>
       <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">タイマー一覧</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">タイマー一覧</h1>
         <a
           href="/timers/new"
-          class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
           新規作成
         </a>
@@ -50,7 +50,7 @@ app.get('/timers/:id/edit', async (c) => {
   const timer = await repo.getById(c.req.param('id'));
   if (!timer) {
     return c.render(
-      <div class="rounded-lg border border-dashed p-12 text-center text-gray-500">
+      <div class="rounded-lg border border-dashed border-gray-300 p-12 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
         タイマーが見つかりません
       </div>,
     );

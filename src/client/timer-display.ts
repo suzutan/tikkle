@@ -102,3 +102,48 @@ window.timerForm = function (opts: { type: string; isEdit: boolean }): TimerForm
     onTypeChange() {},
   };
 };
+
+// Dark mode management
+interface DarkModeData {
+  isDark: boolean;
+  init(): void;
+  toggle(): void;
+  updateDOM(): void;
+}
+
+declare global {
+  interface Window {
+    darkMode: () => DarkModeData;
+  }
+}
+
+window.darkMode = function (): DarkModeData {
+  return {
+    isDark: false,
+
+    init() {
+      // Load from localStorage or use system preference
+      const stored = localStorage.getItem('darkMode');
+      if (stored !== null) {
+        this.isDark = stored === 'true';
+      } else {
+        this.isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+      this.updateDOM();
+    },
+
+    toggle() {
+      this.isDark = !this.isDark;
+      localStorage.setItem('darkMode', String(this.isDark));
+      this.updateDOM();
+    },
+
+    updateDOM() {
+      if (this.isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    },
+  };
+};
