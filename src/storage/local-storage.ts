@@ -11,7 +11,11 @@ export class LocalStorageTimerRepository implements TimerRepository {
   getAll(): Timer[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as Timer[];
+    try {
+      return JSON.parse(raw) as Timer[];
+    } catch {
+      return [];
+    }
   }
 
   getById(id: string): Timer | undefined {

@@ -5,7 +5,7 @@ import { useTimers } from '@/hooks/use-timers';
 import { useTimer } from '@/hooks/use-timer';
 import { TimerForm } from './timer-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CreateTimerInput, UpdateTimerInput } from '@/domain/timer/types';
+import type { CreateTimerInput } from '@/domain/timer/types';
 
 export function EditTimerPage({ timerId }: { timerId: string }) {
   const router = useRouter();
@@ -21,10 +21,7 @@ export function EditTimerPage({ timerId }: { timerId: string }) {
   }
 
   const handleSubmit = (input: CreateTimerInput) => {
-    const updateInput: UpdateTimerInput = {
-      ...input,
-    } as UpdateTimerInput;
-    updateTimer(timerId, updateInput);
+    updateTimer(timerId, input);
     router.push('/');
   };
 
