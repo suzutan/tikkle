@@ -24,7 +24,8 @@ export interface StaminaTimer extends TimerBase {
   type: 'stamina';
   currentValue: number;
   maxValue: number;
-  recoveryIntervalMinutes: number;
+  recoveryIntervalMinutes: number; // Deprecated: use recoveryIntervalSeconds
+  recoveryIntervalSeconds?: number; // Preferred: recovery interval in seconds
   lastUpdatedAt: string;
 }
 
@@ -96,6 +97,7 @@ export type CreateTimerInput =
       currentValue: number;
       maxValue: number;
       recoveryIntervalMinutes: number;
+      recoveryIntervalSeconds?: number;
       lastUpdatedAt: string;
     }
   | {
@@ -118,6 +120,7 @@ export type UpdateTimerInput =
       currentValue?: number;
       maxValue?: number;
       recoveryIntervalMinutes?: number;
+      recoveryIntervalSeconds?: number;
       lastUpdatedAt?: string;
     }
   | {

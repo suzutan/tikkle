@@ -18,6 +18,7 @@ export const timers = sqliteTable('timers', {
   lastUpdatedAt: text('last_updated_at'),
   // stamina
   recoveryIntervalMinutes: real('recovery_interval_minutes'),
+  recoveryIntervalSeconds: real('recovery_interval_seconds'), // Preferred over minutes
   // periodic-increment
   incrementAmount: integer('increment_amount'),
   scheduleTimes: text('schedule_times'), // JSON array

@@ -60,7 +60,7 @@ app.get('/', async (c) => {
       </div>
 
       {/* Card view */}
-      <div x-show="viewMode === 'card'" class="space-y-4" id="timer-list">
+      <div x-show="viewMode === 'card'" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" id="timer-list">
         {timers.length === 0
           ? <TimerCardEmpty />
           : timers.map((timer) => <TimerCard timer={timer} />)}
@@ -106,15 +106,21 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
       return { name, type, startDate: datetimeLocalToISO(body.startDate) };
     case 'countdown-elapsed':
       return { name, type, targetDate: datetimeLocalToISO(body.targetDate) };
-    case 'stamina':
+    case 'stamina': {
+      // Calculate total seconds from minutes and seconds inputs
+      const minutes = Number(body.recoveryIntervalMinutes) || 0;
+      const seconds = Number(body.recoveryIntervalSeconds) || 0;
+      const totalSeconds = minutes * 60 + seconds;
       return {
         name,
         type,
         currentValue: Number(body.currentValue),
         maxValue: Number(body.maxValue),
-        recoveryIntervalMinutes: Number(body.recoveryIntervalMinutes),
+        recoveryIntervalMinutes: minutes, // Keep for backwards compatibility
+        recoveryIntervalSeconds: totalSeconds,
         lastUpdatedAt: new Date().toISOString(),
       };
+    }
     case 'periodic-increment':
       return {
         name,
