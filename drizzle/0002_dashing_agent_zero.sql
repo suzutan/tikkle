@@ -1,0 +1,1 @@
+ALTER TABLE `timers` ADD `tags` text;

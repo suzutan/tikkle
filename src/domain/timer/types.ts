@@ -1,6 +1,7 @@
 interface TimerBase {
   id: string;
   name: string;
+  tags?: string[]; // Optional array of tag strings
   createdAt: string;
   updatedAt: string;
 }
@@ -88,9 +89,9 @@ export type TimerState =
   | PeriodicIncrementState;
 
 export type CreateTimerInput =
-  | { name: string; type: 'countdown'; targetDate: string }
-  | { name: string; type: 'elapsed'; startDate: string }
-  | { name: string; type: 'countdown-elapsed'; targetDate: string }
+  | { name: string; type: 'countdown'; targetDate: string; tags?: string[] }
+  | { name: string; type: 'elapsed'; startDate: string; tags?: string[] }
+  | { name: string; type: 'countdown-elapsed'; targetDate: string; tags?: string[] }
   | {
       name: string;
       type: 'stamina';
@@ -99,6 +100,7 @@ export type CreateTimerInput =
       recoveryIntervalMinutes: number;
       recoveryIntervalSeconds?: number;
       lastUpdatedAt: string;
+      tags?: string[];
     }
   | {
       name: string;
@@ -108,12 +110,13 @@ export type CreateTimerInput =
       incrementAmount: number;
       scheduleTimes: string[];
       lastUpdatedAt: string;
+      tags?: string[];
     };
 
 export type UpdateTimerInput =
-  | { type: 'countdown'; name?: string; targetDate?: string }
-  | { type: 'elapsed'; name?: string; startDate?: string }
-  | { type: 'countdown-elapsed'; name?: string; targetDate?: string }
+  | { type: 'countdown'; name?: string; targetDate?: string; tags?: string[] }
+  | { type: 'elapsed'; name?: string; startDate?: string; tags?: string[] }
+  | { type: 'countdown-elapsed'; name?: string; targetDate?: string; tags?: string[] }
   | {
       type: 'stamina';
       name?: string;
@@ -122,6 +125,7 @@ export type UpdateTimerInput =
       recoveryIntervalMinutes?: number;
       recoveryIntervalSeconds?: number;
       lastUpdatedAt?: string;
+      tags?: string[];
     }
   | {
       type: 'periodic-increment';
@@ -131,4 +135,5 @@ export type UpdateTimerInput =
       incrementAmount?: number;
       scheduleTimes?: string[];
       lastUpdatedAt?: string;
+      tags?: string[];
     };

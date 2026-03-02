@@ -10,6 +10,15 @@ export function TimerCard({ timer }: { timer: Timer }) {
         <div class="flex-1">
           <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{timer.name}</h3>
           <p class="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">{TIMER_TYPE_LABELS[timer.type]}</p>
+          {timer.tags && timer.tags.length > 0 && (
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              {timer.tags.map((tag) => (
+                <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div class="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           <a
@@ -152,9 +161,14 @@ export function TimerListItem({ timer }: { timer: Timer }) {
 
       {/* Timer info */}
       <div class="flex-1 min-w-0" x-data={`timerDisplay('${timerJson}')`}>
-        <div class="flex items-baseline gap-2">
+        <div class="flex items-baseline gap-2 flex-wrap">
           <h3 class="truncate font-semibold text-gray-900 dark:text-gray-100">{timer.name}</h3>
           <span class="text-xs text-gray-500 dark:text-gray-400">{TIMER_TYPE_LABELS[timer.type]}</span>
+          {timer.tags && timer.tags.length > 0 && timer.tags.map((tag) => (
+            <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+              {tag}
+            </span>
+          ))}
         </div>
         <div class="mt-0.5 flex items-baseline gap-2">
           <p
