@@ -1,0 +1,9 @@
+name = "tikkle"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tikkle-db"
+database_id = "placeholder-replace-after-d1-create"
+migrations_dir = "drizzle"
