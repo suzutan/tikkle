@@ -45,9 +45,27 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 migrations apply tikkle-db --remote
+        continue-on-error: true
+
+      - name: Retry Migrate D1 (production)
+        if: github.ref == 'refs/heads/master' && failure()
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply tikkle-db --remote
 
       - name: Migrate D1 (preview)
         if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply tikkle-db-preview --remote
+        continue-on-error: true
+
+      - name: Retry Migrate D1 (preview)
+        if: github.event_name == 'pull_request' && failure()
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -61,13 +79,23 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=tikkle
+        continue-on-error: true
+
+      - name: Retry Deploy to Cloudflare Pages (if failed)
+        if: steps.deploy.outcome == 'failure'
+        id: deploy-retry
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=tikkle
 
       - name: Comment preview URL on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            const url = '${{ steps.deploy.outputs.deployment-url }}';
+            const url = '${{ steps.deploy.outputs.deployment-url }}' || '${{ steps.deploy-retry.outputs.deployment-url }}';
             if (!url) return;
             const body = `### Preview deployment\n${url}`;
             const { data: comments } = await github.rest.issues.listComments({
