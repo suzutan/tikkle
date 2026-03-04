@@ -95,7 +95,7 @@ window.timerDisplay = function (json: string): TimerDisplayData {
           // 完全回復予定時刻と残り時間を表示
           if (!state.isFull && state.timeToFullMs > 0) {
             const fullRecoveryDate = new Date(now + state.timeToFullMs);
-            this.targetTime = `完全回復: ${formatDateTime(fullRecoveryDate.toISOString())} (${formatDuration(state.timeToFullMs)}後)`;
+            this.targetTime = `完全回復: ${formatDateTime(fullRecoveryDate.toISOString())}\n(${formatDuration(state.timeToFullMs)}後)`;
           } else {
             this.targetTime = '完全回復済み';
           }
@@ -113,7 +113,7 @@ window.timerDisplay = function (json: string): TimerDisplayData {
             const nextMs = state.nextIncrementAt.getTime() - now;
             this.subtext = `次回増加まで: ${formatDuration(Math.max(0, nextMs))}`;
             const maxDate = new Date(now + state.timeToMaxMs);
-            this.targetTime = `完全回復: ${formatDateTime(maxDate.toISOString())} (${formatDuration(state.timeToMaxMs)}後)`;
+            this.targetTime = `完全回復: ${formatDateTime(maxDate.toISOString())}\n(${formatDuration(state.timeToMaxMs)}後)`;
           }
           break;
         }
