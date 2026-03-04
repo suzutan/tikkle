@@ -1,5 +1,5 @@
 import { computeTimerState } from '../domain/timer/compute';
-import { formatDuration, formatFraction, formatDateTime, formatTime } from '../domain/timer/format';
+import { formatDuration, formatFraction, formatDateTime } from '../domain/timer/format';
 import type { Timer } from '../domain/timer/types';
 
 interface TimerDisplayData {
@@ -90,12 +90,12 @@ window.timerDisplay = function (json: string): TimerDisplayData {
         case 'stamina': {
           this.display = formatFraction(state.currentValue, state.maxValue);
           this.percentage = (state.currentValue / state.maxValue) * 100;
-          this.subtext = state.isFull ? '' : `次の回復: ${formatDuration(state.nextRecoveryMs)}`;
+          this.subtext = state.isFull ? '' : `次の回復まで: ${formatDuration(state.nextRecoveryMs)}`;
 
-          // 完全回復予定時刻を計算（絶対時刻で表示）
+          // 完全回復予定時刻と残り時間を表示
           if (!state.isFull && state.timeToFullMs > 0) {
             const fullRecoveryDate = new Date(now + state.timeToFullMs);
-            this.targetTime = `完全回復: ${formatDateTime(fullRecoveryDate.toISOString())}`;
+            this.targetTime = `完全回復: ${formatDateTime(fullRecoveryDate.toISOString())}\n(${formatDuration(state.timeToFullMs)}後)`;
           } else {
             this.targetTime = '完全回復済み';
           }
@@ -104,13 +104,16 @@ window.timerDisplay = function (json: string): TimerDisplayData {
         case 'periodic-increment': {
           this.display = formatFraction(state.currentValue, state.maxValue);
           this.percentage = (state.currentValue / state.maxValue) * 100;
-          this.subtext = state.isAtMax ? '' : `全回復まで: ${formatDuration(state.timeToMaxMs)}`;
 
-          // 次回増加時刻と上限到達予定時刻を表示
-          if (state.nextIncrementAt) {
-            this.targetTime = `次回: ${formatTime(state.nextIncrementAt.toISOString())}`;
-          } else {
+          // 次回増加までのカウントダウンと完全回復予定を表示
+          if (state.isAtMax || !state.nextIncrementAt) {
+            this.subtext = '';
             this.targetTime = '上限到達';
+          } else {
+            const nextMs = state.nextIncrementAt.getTime() - now;
+            this.subtext = `次回増加まで: ${formatDuration(Math.max(0, nextMs))}`;
+            const maxDate = new Date(now + state.timeToMaxMs);
+            this.targetTime = `完全回復: ${formatDateTime(maxDate.toISOString())}\n(${formatDuration(state.timeToMaxMs)}後)`;
           }
           break;
         }

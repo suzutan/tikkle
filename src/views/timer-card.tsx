@@ -77,7 +77,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
             x-text="display"
           ></p>
           <p x-show="subtext" x-text="subtext" class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"></p>
-          <p x-show="targetTime" x-text="targetTime" class="text-xs text-gray-400 dark:text-gray-500"></p>
+          <p x-show="targetTime" x-text="targetTime" class="whitespace-pre-line text-xs text-gray-400 dark:text-gray-500"></p>
         </div>
       </div>
 
@@ -176,7 +176,7 @@ export function TimerListItem({ timer }: { timer: Timer }) {
             x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
             x-text="display"
           ></p>
-          <p x-show="targetTime" x-text="targetTime" class="text-xs text-gray-400 dark:text-gray-500"></p>
+          <p x-show="targetTime" x-text="targetTime" class="whitespace-pre-line text-xs text-gray-400 dark:text-gray-500"></p>
         </div>
       </div>
 
