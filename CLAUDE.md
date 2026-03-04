@@ -42,7 +42,28 @@ src/
   renderer.tsx      # HTML レイアウト
 ```
 
+## Development Cycle
+
+作業を行う際は必ず以下のサイクルを守ること。
+
+1. 最新の master/main を起点にブランチを作成する
+2. 区切りの良い作業単位で commit & push する
+3. 1つ目のコミットを行った後は必ず PR を起票する
+   - master/main とブランチの差分を確認し、PR title・body を作成または更新する
+   - PR body は `.github/pull_request_template.md` をベースに書く
+   - PR job が成功することを確認する
+
 ## Development Principles
+
+### DRY / KISS / YAGNI
+
+- DRY: 重複を排除し、知識は単一の場所に集約する
+- KISS: シンプルに保つ。複雑な実装より明快な実装を選ぶ
+- YAGNI: 今必要でない機能・フォールバックコードは書かない。使わないコードは将来のノイズになる。必要になれば過去の commit を遡ればよい
+
+### 読みやすいコードを書く
+
+将来の自分（Claude Code 含む）や他の人がコンテキストを理解できるコードを書く。意図が自明でない箇所にはコメントを入れる。
 
 ### 修正には必ずテストを伴わせる
 
