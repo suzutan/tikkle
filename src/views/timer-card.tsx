@@ -41,42 +41,8 @@ export function TimerCard({ timer }: { timer: Timer }) {
           </button>
         </div>
       </div>
-      <div
-        class="flex items-center gap-6"
-        x-data={`timerDisplay('${timerJson}')`}
-      >
-        {/* Circular progress indicator */}
-        <div class="relative flex h-32 w-32 flex-shrink-0 items-center justify-center" x-show="percentage >= 0">
-          <svg class="h-full w-full -rotate-90 transform">
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              stroke="currentColor"
-              stroke-width="8"
-              fill="none"
-              class="text-gray-200 dark:text-gray-700"
-            />
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              stroke="currentColor"
-              stroke-width="8"
-              fill="none"
-              stroke-linecap="round"
-              class="transition-all duration-1000 ease-linear"
-              x-bind:class="expired ? 'text-red-500 dark:text-red-400' : percentage > 80 ? 'text-green-500 dark:text-green-400' : percentage > 50 ? 'text-blue-500 dark:text-blue-400' : percentage > 20 ? 'text-yellow-500 dark:text-yellow-400' : 'text-orange-500 dark:text-orange-400'"
-              x-bind:style="`stroke-dasharray: ${2 * Math.PI * 56}; stroke-dashoffset: ${2 * Math.PI * 56 * (1 - percentage / 100)}`"
-            />
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-2xl font-bold" x-text="`${Math.round(percentage)}%`" x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"></span>
-          </div>
-        </div>
-
-        {/* Timer display */}
-        <div class="flex-1 space-y-2">
+      <div x-data={`timerDisplay('${timerJson}')`}>
+        <div class="space-y-2">
           <p
             class="font-timer text-3xl font-bold tabular-nums leading-none"
             x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
@@ -84,6 +50,23 @@ export function TimerCard({ timer }: { timer: Timer }) {
           ></p>
           <p x-show="subtext" x-text="subtext" class="font-timer text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"></p>
           <p x-show="targetTime" x-text="targetTime" class="whitespace-pre-line text-xs text-gray-400 dark:text-gray-500"></p>
+        </div>
+        {/* Progress bar */}
+        <div x-show="percentage >= 0" class="mt-3">
+          <div class="mb-1 flex items-center justify-end">
+            <span
+              class="font-timer text-xs font-semibold"
+              x-text="`${Math.round(percentage)}%`"
+              x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'"
+            ></span>
+          </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              class="h-2 rounded-full transition-all duration-1000 ease-linear"
+              x-bind:class="expired ? 'bg-red-500 dark:bg-red-400' : percentage > 80 ? 'bg-green-500 dark:bg-green-400' : percentage > 50 ? 'bg-blue-500 dark:bg-blue-400' : percentage > 20 ? 'bg-yellow-500 dark:bg-yellow-400' : 'bg-orange-500 dark:bg-orange-400'"
+              x-bind:style="`width: ${Math.min(100, percentage)}%`"
+            ></div>
+          </div>
         </div>
       </div>
 
@@ -133,38 +116,8 @@ export function TimerListItem({ timer }: { timer: Timer }) {
   const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
 
   return (
-    <div class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800" x-data="{ showDeleteModal: false }">
-      {/* Progress ring - compact */}
-      <div
-        class="relative flex h-12 w-12 flex-shrink-0 items-center justify-center"
-        x-data={`timerDisplay('${timerJson}')`}
-        x-show="percentage >= 0"
-      >
-        <svg class="h-full w-full -rotate-90 transform">
-          <circle
-            cx="24"
-            cy="24"
-            r="20"
-            stroke="currentColor"
-            stroke-width="3"
-            fill="none"
-            class="text-gray-200 dark:text-gray-700"
-          />
-          <circle
-            cx="24"
-            cy="24"
-            r="20"
-            stroke="currentColor"
-            stroke-width="3"
-            fill="none"
-            stroke-linecap="round"
-            class="transition-all duration-1000 ease-linear"
-            x-bind:class="expired ? 'text-red-500 dark:text-red-400' : percentage > 80 ? 'text-green-500 dark:text-green-400' : percentage > 50 ? 'text-blue-500 dark:text-blue-400' : percentage > 20 ? 'text-yellow-500 dark:text-yellow-400' : 'text-orange-500 dark:text-orange-400'"
-            x-bind:style="`stroke-dasharray: ${2 * Math.PI * 20}; stroke-dashoffset: ${2 * Math.PI * 20 * (1 - percentage / 100)}`"
-          />
-        </svg>
-      </div>
-
+    <div class="group rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800" x-data="{ showDeleteModal: false }">
+      <div class="flex items-center gap-4">
       {/* Timer info */}
       <div class="flex-1 min-w-0" x-data={`timerDisplay('${timerJson}')`}>
         <div class="flex items-baseline gap-2 flex-wrap">
@@ -182,7 +135,23 @@ export function TimerListItem({ timer }: { timer: Timer }) {
             x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
             x-text="display"
           ></p>
+          <span
+            x-show="percentage >= 0"
+            class="font-timer text-xs font-semibold"
+            x-text="`${Math.round(percentage)}%`"
+            x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'"
+          ></span>
           <p x-show="targetTime" x-text="targetTime" class="whitespace-pre-line text-xs text-gray-400 dark:text-gray-500"></p>
+        </div>
+        {/* Progress bar */}
+        <div x-show="percentage >= 0" class="mt-1.5">
+          <div class="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              class="h-1.5 rounded-full transition-all duration-1000 ease-linear"
+              x-bind:class="expired ? 'bg-red-500 dark:bg-red-400' : percentage > 80 ? 'bg-green-500 dark:bg-green-400' : percentage > 50 ? 'bg-blue-500 dark:bg-blue-400' : percentage > 20 ? 'bg-yellow-500 dark:bg-yellow-400' : 'bg-orange-500 dark:bg-orange-400'"
+              x-bind:style="`width: ${Math.min(100, percentage)}%`"
+            ></div>
+          </div>
         </div>
       </div>
 
@@ -207,6 +176,7 @@ export function TimerListItem({ timer }: { timer: Timer }) {
           </svg>
         </button>
       </div>
+      </div>
 
       {/* Delete modal */}
       <div
@@ -229,7 +199,7 @@ export function TimerListItem({ timer }: { timer: Timer }) {
             </button>
             <button
               hx-delete={`/api/timers/${timer.id}`}
-              hx-target="closest div.group.flex"
+              hx-target="closest div.group"
               hx-swap="outerHTML"
               x-on:click="showDeleteModal = false"
               class="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
