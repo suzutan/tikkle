@@ -17,7 +17,7 @@ describe('formatDuration', () => {
     const result = formatDuration(ms);
 
     // Then
-    expect(result).toBe('2日 3時間 45分 12秒');
+    expect(result).toBe('2日 03時間 45分 12秒');
   });
 
   test('should format zero duration', () => {
@@ -42,48 +42,48 @@ describe('formatDuration', () => {
     expect(result).toBe('45秒');
   });
 
-  test('should format only minutes and seconds', () => {
-    // Given: 5 minutes 30 seconds
-    const ms = 5 * 60000 + 30 * 1000;
+  test('should pad subordinate units', () => {
+    // Given: 5 minutes 3 seconds
+    const ms = 5 * 60000 + 3 * 1000;
 
     // When
     const result = formatDuration(ms);
 
-    // Then
-    expect(result).toBe('5分 30秒');
+    // Then: leading unit not padded, subordinate padded
+    expect(result).toBe('5分 03秒');
   });
 
-  test('should format only hours', () => {
+  test('should format hours with padded trailing zeros', () => {
     // Given: exactly 2 hours
     const ms = 2 * 3600000;
 
     // When
     const result = formatDuration(ms);
 
-    // Then
-    expect(result).toBe('2時間');
+    // Then: subordinate units shown as padded zeros
+    expect(result).toBe('2時間 00分 00秒');
   });
 
-  test('should format only days', () => {
+  test('should format days with padded trailing zeros', () => {
     // Given: exactly 7 days
     const ms = 7 * 86400000;
 
     // When
     const result = formatDuration(ms);
 
-    // Then
-    expect(result).toBe('7日');
+    // Then: subordinate units shown as padded zeros
+    expect(result).toBe('7日 00時間 00分 00秒');
   });
 
-  test('should omit zero intermediate units', () => {
+  test('should pad zero intermediate units for stable width', () => {
     // Given: 1 day 0 hours 0 minutes 30 seconds
     const ms = 86400000 + 30 * 1000;
 
     // When
     const result = formatDuration(ms);
 
-    // Then
-    expect(result).toBe('1日 30秒');
+    // Then: intermediate zeros are shown with padding
+    expect(result).toBe('1日 00時間 00分 30秒');
   });
 
   test('should truncate sub-second precision', () => {
@@ -105,7 +105,7 @@ describe('formatDuration', () => {
     const result = formatDuration(ms);
 
     // Then
-    expect(result).toBe('365日');
+    expect(result).toBe('365日 00時間 00分 00秒');
   });
 });
 
@@ -119,7 +119,7 @@ describe('formatDurationCompact', () => {
     const result = formatDurationCompact(ms);
 
     // Then
-    expect(result).toBe('2d 3h 45m 12s');
+    expect(result).toBe('2d 03h 45m 12s');
   });
 
   test('should format zero duration in compact form', () => {
@@ -144,15 +144,15 @@ describe('formatDurationCompact', () => {
     expect(result).toBe('45s');
   });
 
-  test('should omit zero intermediate units in compact form', () => {
+  test('should pad zero intermediate units in compact form', () => {
     // Given: 1 day 30 seconds
     const ms = 86400000 + 30 * 1000;
 
     // When
     const result = formatDurationCompact(ms);
 
-    // Then
-    expect(result).toBe('1d 30s');
+    // Then: intermediate zeros are shown with padding
+    expect(result).toBe('1d 00h 00m 30s');
   });
 });
 

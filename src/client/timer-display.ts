@@ -22,6 +22,8 @@ declare global {
   interface Window {
     timerDisplay: (json: string) => TimerDisplayData;
     timerForm: (opts: { type: string; isEdit: boolean }) => TimerFormData;
+    readFilterFromUrl: (key: string) => string[];
+    syncFilterToUrl: (key: string, values: string[]) => void;
   }
 }
 
@@ -128,6 +130,23 @@ window.timerForm = function (opts: { type: string; isEdit: boolean }): TimerForm
     isEdit: opts.isEdit,
     onTypeChange() {},
   };
+};
+
+// URL filter sync helpers
+window.readFilterFromUrl = function (key: string): string[] {
+  const val = new URLSearchParams(window.location.search).get(key);
+  return val ? val.split(',').filter(Boolean) : [];
+};
+
+window.syncFilterToUrl = function (key: string, values: string[]): void {
+  const params = new URLSearchParams(window.location.search);
+  if (values.length > 0) {
+    params.set(key, values.join(','));
+  } else {
+    params.delete(key);
+  }
+  const qs = params.toString();
+  history.replaceState(null, '', qs ? `${location.pathname}?${qs}` : location.pathname);
 };
 
 // Dark mode management
