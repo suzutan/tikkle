@@ -9,7 +9,7 @@ export const renderer = jsxRenderer(({ children, title }) => {
         <title>{title ? `${title} - Tikkle` : 'Tikkle'}</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){var d=localStorage.getItem('darkMode');if(d==='true'||(d===null&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')})();`
+          __html: `tailwind.config={darkMode:'class'};(function(){var d=localStorage.getItem('darkMode');if(d==='true'||(d===null&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')})();`
         }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
