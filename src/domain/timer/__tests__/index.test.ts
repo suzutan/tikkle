@@ -197,7 +197,7 @@ describe('domain/timer barrel file', () => {
       const formatted = formatDuration(ms);
 
       // Then
-      expect(formatted).toBe('1時間 1分 1秒');
+      expect(formatted).toBe('1時間 01分 01秒');
     });
 
     test('should format compact via re-exported formatDurationCompact', () => {
@@ -208,7 +208,7 @@ describe('domain/timer barrel file', () => {
       const formatted = formatDurationCompact(ms);
 
       // Then
-      expect(formatted).toBe('1h 1m 1s');
+      expect(formatted).toBe('1h 01m 01s');
     });
 
     test('should format fraction via re-exported formatFraction', () => {

@@ -8,10 +8,16 @@ export const renderer = jsxRenderer(({ children, title }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title ? `${title} - Tikkle` : 'Tikkle'}</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){var d=localStorage.getItem('darkMode');if(d==='true'||(d===null&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')})();`
+        }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
         <script src="https://unpkg.com/htmx.org@2.0.4" />
         <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" />
         <script src="/static/client.js" />
-        <style>{`[x-cloak] { display: none !important; }`}</style>
+        <style>{`[x-cloak] { display: none !important; } .font-timer { font-family: 'Share Tech Mono', monospace; font-variant-numeric: tabular-nums; }`}</style>
       </head>
       <body class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
         <div class="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8" x-data="darkMode()" x-init="init()">

@@ -5,6 +5,7 @@ import { createTimerSchema } from './domain/timer/validation';
 import { datetimeLocalToISO } from './lib/timezone';
 import { TimerCard, TimerCardEmpty, TimerListItem } from './views/timer-card';
 import { TimerForm } from './views/timer-form';
+import { TIMER_TYPE_LABELS } from './lib/timer-type-labels';
 import type { CreateTimerInput } from './domain/timer/types';
 
 type Bindings = {
@@ -25,7 +26,10 @@ app.get('/', async (c) => {
   const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
 
   return c.render(
-    <div x-data="{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: '', filterTags: [] }">
+    <div
+      x-data="{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), typeSearch: '', tagSearch: '' }"
+      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v))"
+    >
       <div class="mb-6">
         <div class="flex items-center justify-between mb-4">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">タイマー一覧</h1>
@@ -65,28 +69,57 @@ app.get('/', async (c) => {
 
         {/* Filters */}
         <div class="flex flex-wrap gap-3 rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
-          <div class="flex-1 min-w-[200px]">
+          <div class="flex-1 min-w-[200px]" x-data="{ typeOpen: false }" {...{ 'x-on:click.outside': 'typeOpen = false' }}>
             <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">種別でフィルター</label>
-            <select
-              x-model="filterType"
-              class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-            >
-              <option value="">すべて</option>
-              <option value="countdown">カウントダウン</option>
-              <option value="elapsed">経過時間</option>
-              <option value="countdown-elapsed">カウントダウン→経過</option>
-              <option value="stamina">スタミナ回復</option>
-              <option value="periodic-increment">定期増加+上限</option>
-            </select>
+            <div class="relative">
+              <button
+                type="button"
+                x-on:click="typeOpen = !typeOpen"
+                class="flex w-full items-center justify-between rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              >
+                <span x-text={`filterType.length === 0 ? 'すべて' : filterType.map(t => (${JSON.stringify(TIMER_TYPE_LABELS)})[t] || t).join(', ')`}></span>
+                <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div x-show="typeOpen" x-cloak class="absolute z-20 mt-1 w-full rounded border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+                <div class="p-2">
+                  <input
+                    type="text"
+                    x-model="typeSearch"
+                    placeholder="種別を検索..."
+                    class="w-full rounded border border-gray-200 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  />
+                </div>
+                <div class="max-h-48 overflow-y-auto px-2 pb-2">
+                  {Object.entries(TIMER_TYPE_LABELS).map(([value, label]) => (
+                    <label
+                      x-show={`'${label}'.includes(typeSearch) || '${value}'.includes(typeSearch) || typeSearch === ''`}
+                      class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-600"
+                    >
+                      <input type="checkbox" x-model="filterType" value={value} class="rounded" />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           {allTags.length > 0 && (
             <div class="flex-1 min-w-[200px]">
               <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">タグでフィルター</label>
+              <input
+                type="text"
+                x-model="tagSearch"
+                placeholder="タグ検索..."
+                class="mb-2 w-full rounded border border-gray-200 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
               <div class="flex flex-wrap gap-1.5">
                 {allTags.map((tag) => (
                   <button
                     type="button"
+                    x-show={`'${tag}'.toLowerCase().includes(tagSearch.toLowerCase()) || tagSearch === ''`}
                     x-on:click={`filterTags.includes('${tag}') ? filterTags = filterTags.filter(t => t !== '${tag}') : filterTags.push('${tag}')`}
                     x-bind:class={`filterTags.includes('${tag}') ? 'bg-blue-600 text-white dark:bg-blue-500' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'`}
                     class="rounded-full px-3 py-1 text-xs font-medium transition-colors border border-gray-300 dark:border-gray-600"
@@ -101,7 +134,7 @@ app.get('/', async (c) => {
           <div class="flex items-end">
             <button
               type="button"
-              x-on:click="filterType = ''; filterTags = []"
+              x-on:click="filterType = []; filterTags = []; typeSearch = ''; tagSearch = ''"
               class="rounded bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500"
             >
               フィルターをクリア
@@ -121,7 +154,7 @@ app.get('/', async (c) => {
             <div
               x-show={`(() => {
                 const timer = ${timerJson};
-                if (filterType && timer.type !== filterType) return false;
+                if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
                 return true;
               })()`}
@@ -142,7 +175,7 @@ app.get('/', async (c) => {
             <div
               x-show={`(() => {
                 const timer = ${timerJson};
-                if (filterType && timer.type !== filterType) return false;
+                if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
                 return true;
               })()`}

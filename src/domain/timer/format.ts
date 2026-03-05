@@ -50,13 +50,25 @@ const LABELS_COMPACT: DurationLabels = {
 
 function formatDurationWith(ms: number, labels: DurationLabels): string {
   const { days, hours, minutes, seconds } = decompose(ms);
+  const entries: [number, string][] = [
+    [days, labels.days],
+    [hours, labels.hours],
+    [minutes, labels.minutes],
+    [seconds, labels.seconds],
+  ];
 
   const parts: string[] = [];
-  if (days > 0) parts.push(`${days}${labels.days}`);
-  if (hours > 0) parts.push(`${hours}${labels.hours}`);
-  if (minutes > 0) parts.push(`${minutes}${labels.minutes}`);
-  if (seconds > 0) parts.push(`${seconds}${labels.seconds}`);
-
+  let started = false;
+  for (const [value, label] of entries) {
+    if (value > 0 || started) {
+      if (!started) {
+        parts.push(`${value}${label}`);
+        started = true;
+      } else {
+        parts.push(`${String(value).padStart(2, '0')}${label}`);
+      }
+    }
+  }
   if (parts.length === 0) return `0${labels.seconds}`;
   return parts.join(' ');
 }
