@@ -215,6 +215,7 @@ app.get('/', async (c) => {
           const timerTags = JSON.stringify(timer.tags || []).replace(/</g, '\\u003c');
           return (
             <div
+              data-timer-card
               x-show={`(() => {
                 const timer = ${timerJson};
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
@@ -236,6 +237,7 @@ app.get('/', async (c) => {
           const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
           return (
             <div
+              data-timer-card
               x-show={`(() => {
                 const timer = ${timerJson};
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;

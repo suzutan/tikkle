@@ -90,7 +90,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
             </button>
             <button
               hx-delete={`/api/timers/${timer.id}`}
-              hx-target="closest div.group"
+              hx-target="closest [data-timer-card]"
               hx-swap="outerHTML"
               x-on:click="showDeleteModal = false"
               class="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
@@ -199,7 +199,7 @@ export function TimerListItem({ timer }: { timer: Timer }) {
             </button>
             <button
               hx-delete={`/api/timers/${timer.id}`}
-              hx-target="closest div.group"
+              hx-target="closest [data-timer-card]"
               hx-swap="outerHTML"
               x-on:click="showDeleteModal = false"
               class="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
