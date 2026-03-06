@@ -8,6 +8,11 @@
     ":semanticCommits",
     "config:recommended"
   ],
-  "automerge": true,
-  "branchConcurrentLimit": 0
+  "branchConcurrentLimit": 10,
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    }
+  ]
 }
