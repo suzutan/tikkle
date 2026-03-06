@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    ":pinAllExceptPeerDependencies",
+    ":prNotPending",
+    ":disableRateLimiting",
+    ":timezone(Asia/Tokyo)",
+    ":semanticCommits",
+    "config:recommended"
+  ],
+  "automerge": true,
+  "branchConcurrentLimit": 0
+}
