@@ -30,6 +30,7 @@ export function toTimer(row: TimerRow): Timer {
         currentValue: row.currentValue!,
         maxValue: row.maxValue!,
         recoveryIntervalMinutes: row.recoveryIntervalMinutes!,
+        recoveryIntervalSeconds: row.recoveryIntervalSeconds ?? undefined,
         lastUpdatedAt: row.lastUpdatedAt!,
       };
     case 'periodic-increment':
@@ -70,6 +71,7 @@ export function toInsertValues(input: CreateTimerInput, id: string, now: string)
         currentValue: input.currentValue,
         maxValue: input.maxValue,
         recoveryIntervalMinutes: input.recoveryIntervalMinutes,
+        recoveryIntervalSeconds: input.recoveryIntervalSeconds ?? null,
         lastUpdatedAt: input.lastUpdatedAt,
       };
     case 'periodic-increment':
@@ -148,6 +150,7 @@ export class D1TimerRepository {
         if (input.currentValue !== undefined) updateValues.currentValue = input.currentValue;
         if (input.maxValue !== undefined) updateValues.maxValue = input.maxValue;
         if (input.recoveryIntervalMinutes !== undefined) updateValues.recoveryIntervalMinutes = input.recoveryIntervalMinutes;
+        if (input.recoveryIntervalSeconds !== undefined) updateValues.recoveryIntervalSeconds = input.recoveryIntervalSeconds;
         if (input.lastUpdatedAt !== undefined) updateValues.lastUpdatedAt = input.lastUpdatedAt;
         break;
       case 'periodic-increment':

@@ -56,6 +56,7 @@ export interface CountdownState {
 export interface ElapsedState {
   type: 'elapsed';
   elapsedMs: number;
+  pendingMs: number; // ms until start, 0 if already started
 }
 
 export interface CountdownElapsedState {

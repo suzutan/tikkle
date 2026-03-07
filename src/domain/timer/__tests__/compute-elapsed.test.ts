@@ -29,6 +29,7 @@ describe('computeElapsed', () => {
     const expectedMs = now.getTime() - new Date(startDate).getTime();
     expect(state.type).toBe('elapsed');
     expect(state.elapsedMs).toBe(expectedMs);
+    expect(state.pendingMs).toBe(0);
   });
 
   test('should return 0 elapsed when start date equals now', () => {
@@ -42,9 +43,10 @@ describe('computeElapsed', () => {
 
     // Then
     expect(state.elapsedMs).toBe(0);
+    expect(state.pendingMs).toBe(0);
   });
 
-  test('should clamp to 0 when start date is in the future', () => {
+  test('should return pendingMs when start date is in the future', () => {
     // Given
     const timer = createElapsedTimer({
       startDate: '2025-12-31T23:59:59.000Z',
@@ -56,6 +58,8 @@ describe('computeElapsed', () => {
 
     // Then
     expect(state.elapsedMs).toBe(0);
+    const expectedPendingMs = new Date('2025-12-31T23:59:59.000Z').getTime() - now.getTime();
+    expect(state.pendingMs).toBe(expectedPendingMs);
   });
 
   test('should return 1ms elapsed when 1ms has passed', () => {
@@ -70,6 +74,7 @@ describe('computeElapsed', () => {
 
     // Then
     expect(state.elapsedMs).toBe(1);
+    expect(state.pendingMs).toBe(0);
   });
 
   test('should handle large elapsed durations', () => {
@@ -86,5 +91,6 @@ describe('computeElapsed', () => {
     const expectedMs =
       now.getTime() - new Date('2020-01-01T00:00:00.000Z').getTime();
     expect(state.elapsedMs).toBe(expectedMs);
+    expect(state.pendingMs).toBe(0);
   });
 });

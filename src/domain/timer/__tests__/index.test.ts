@@ -147,7 +147,7 @@ describe('domain/timer barrel file', () => {
         type: 'countdown', remainingMs: 1000, isExpired: false,
       };
       const elapsedState: ElapsedState = {
-        type: 'elapsed', elapsedMs: 5000,
+        type: 'elapsed', elapsedMs: 5000, pendingMs: 0,
       };
       const ceState: CountdownElapsedState = {
         type: 'countdown-elapsed', mode: 'countdown', ms: 3000,

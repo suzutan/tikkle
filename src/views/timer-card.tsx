@@ -89,72 +89,76 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
           <p x-show="subtext" x-text="subtext" class="font-timer text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"></p>
           <p x-show="targetTime" x-text="targetTime" class="whitespace-pre-line text-xs text-gray-400 dark:text-gray-500"></p>
         </div>
-        {/* Progress bar */}
-        <div x-show="percentage >= 0" class="mt-auto pt-3">
-          <div class="mb-1 flex items-center justify-end">
-            <span
-              class="font-timer text-xs font-semibold"
-              x-text="`${Math.round(percentage)}%`"
-              x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'"
-            ></span>
+        {/* Bottom section - pushed to bottom for consistent alignment */}
+        <div class="mt-auto">
+          {/* Progress bar */}
+          <div x-show="percentage >= 0" class="pt-3">
+            <div class="mb-1 flex items-center justify-end">
+              <span
+                class="font-timer text-xs font-semibold"
+                x-text="`${Math.round(percentage)}%`"
+                x-bind:class="expired ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'"
+              ></span>
+            </div>
+            <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+              <div
+                class="h-2 rounded-full transition-all duration-1000 ease-linear"
+                x-bind:class="expired ? 'bg-red-500 dark:bg-red-400' : percentage > 80 ? 'bg-green-500 dark:bg-green-400' : percentage > 50 ? 'bg-blue-500 dark:bg-blue-400' : percentage > 20 ? 'bg-yellow-500 dark:bg-yellow-400' : 'bg-orange-500 dark:bg-orange-400'"
+                x-bind:style="`width: ${Math.min(100, percentage)}%`"
+              ></div>
+            </div>
           </div>
-          <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-            <div
-              class="h-2 rounded-full transition-all duration-1000 ease-linear"
-              x-bind:class="expired ? 'bg-red-500 dark:bg-red-400' : percentage > 80 ? 'bg-green-500 dark:bg-green-400' : percentage > 50 ? 'bg-blue-500 dark:bg-blue-400' : percentage > 20 ? 'bg-yellow-500 dark:bg-yellow-400' : 'bg-orange-500 dark:bg-orange-400'"
-              x-bind:style="`width: ${Math.min(100, percentage)}%`"
-            ></div>
-          </div>
+          {/* Quick actions or spacer for consistent card height */}
+          {(timer.type === 'stamina' || timer.type === 'periodic-increment') && !archived ? (
+            <div class="flex items-center gap-1.5 border-t border-gray-100 pt-3 mt-3 dark:border-gray-700">
+              <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">値調整:</span>
+              <button
+                hx-post={`/api/timers/${timer.id}/quick-action`}
+                hx-vals='{"action":"adjust-value","delta":"-1"}'
+                hx-swap="none"
+                {...{ 'hx-on::after-request': 'window.location.reload()' }}
+                class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                title="-1"
+              >-1</button>
+              <button
+                hx-post={`/api/timers/${timer.id}/quick-action`}
+                hx-vals='{"action":"adjust-value","delta":"1"}'
+                hx-swap="none"
+                {...{ 'hx-on::after-request': 'window.location.reload()' }}
+                class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                title="+1"
+              >+1</button>
+              <button
+                hx-post={`/api/timers/${timer.id}/quick-action`}
+                hx-vals='{"action":"adjust-value","delta":"10"}'
+                hx-swap="none"
+                {...{ 'hx-on::after-request': 'window.location.reload()' }}
+                class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                title="+10"
+              >+10</button>
+              <div class="flex-1"></div>
+              <button
+                hx-post={`/api/timers/${timer.id}/quick-action`}
+                hx-vals='{"action":"reset-value"}'
+                hx-swap="none"
+                {...{ 'hx-on::after-request': 'window.location.reload()' }}
+                class="rounded px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40"
+                title="0にリセット"
+              >0</button>
+              <button
+                hx-post={`/api/timers/${timer.id}/quick-action`}
+                hx-vals='{"action":"max-value"}'
+                hx-swap="none"
+                {...{ 'hx-on::after-request': 'window.location.reload()' }}
+                class="rounded px-2 py-1 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40"
+                title="最大値にする"
+              >MAX</button>
+            </div>
+          ) : (
+            <div class="h-10"></div>
+          )}
         </div>
       </div>
-
-      {/* Quick actions for value-based timers */}
-      {(timer.type === 'stamina' || timer.type === 'periodic-increment') && !archived && (
-        <div class="mt-auto flex items-center gap-1.5 border-t border-gray-100 pt-3 dark:border-gray-700">
-          <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">値調整:</span>
-          <button
-            hx-post={`/api/timers/${timer.id}/quick-action`}
-            hx-vals='{"action":"adjust-value","delta":"-1"}'
-            hx-swap="none"
-            {...{ 'hx-on::after-request': 'window.location.reload()' }}
-            class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-            title="-1"
-          >-1</button>
-          <button
-            hx-post={`/api/timers/${timer.id}/quick-action`}
-            hx-vals='{"action":"adjust-value","delta":"1"}'
-            hx-swap="none"
-            {...{ 'hx-on::after-request': 'window.location.reload()' }}
-            class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-            title="+1"
-          >+1</button>
-          <button
-            hx-post={`/api/timers/${timer.id}/quick-action`}
-            hx-vals='{"action":"adjust-value","delta":"10"}'
-            hx-swap="none"
-            {...{ 'hx-on::after-request': 'window.location.reload()' }}
-            class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-            title="+10"
-          >+10</button>
-          <div class="flex-1"></div>
-          <button
-            hx-post={`/api/timers/${timer.id}/quick-action`}
-            hx-vals='{"action":"reset-value"}'
-            hx-swap="none"
-            {...{ 'hx-on::after-request': 'window.location.reload()' }}
-            class="rounded px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40"
-            title="0にリセット"
-          >0</button>
-          <button
-            hx-post={`/api/timers/${timer.id}/quick-action`}
-            hx-vals='{"action":"max-value"}'
-            hx-swap="none"
-            {...{ 'hx-on::after-request': 'window.location.reload()' }}
-            class="rounded px-2 py-1 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40"
-            title="最大値にする"
-          >MAX</button>
-        </div>
-      )}
 
       <div
         x-show="showDeleteModal"
