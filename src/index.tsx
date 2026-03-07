@@ -8,6 +8,8 @@ import { datetimeLocalToISO } from './lib/timezone';
 import { TimerCard, TimerCardEmpty, TimerListItem } from './views/timer-card';
 import { TimerForm } from './views/timer-form';
 import { TIMER_TYPE_LABELS } from './lib/timer-type-labels';
+import { TIMER_TEMPLATES } from './lib/timer-templates';
+import { buildFromTemplate, buildDuplicateInput } from './lib/timer-form-helpers';
 import type { CreateTimerInput } from './domain/timer/types';
 
 type Bindings = {
@@ -68,6 +70,37 @@ app.get('/', async (c) => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
               </svg>
             </button>
+          </div>
+
+          <div class="relative" x-data="{ templateOpen: false }" {...{ 'x-on:click.outside': 'templateOpen = false' }}>
+            <button
+              x-on:click="templateOpen = !templateOpen"
+              class="flex items-center gap-1 rounded-lg border border-blue-600 px-3 py-2 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+              </svg>
+              テンプレート
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            <div x-show="templateOpen" x-cloak class="absolute right-0 z-20 mt-1 w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+              <div class="p-1">
+                {TIMER_TEMPLATES.map((tmpl, i) => (
+                  <form method="post" action="/api/timers/from-template" class="contents">
+                    <input type="hidden" name="templateIndex" value={String(i)} />
+                    <button
+                      type="submit"
+                      class="w-full rounded-md px-3 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{tmpl.label}</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">{tmpl.description}</div>
+                    </button>
+                  </form>
+                ))}
+              </div>
+            </div>
           </div>
 
           <a
@@ -501,6 +534,30 @@ app.post('/api/timers/:id/quick-action', async (c) => {
     return c.body(null, 400);
   }
 
+  return c.body(null, 200);
+});
+
+app.post('/api/timers/from-template', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const body = await c.req.parseBody() as Record<string, string>;
+  const index = Number(body.templateIndex);
+
+  if (Number.isNaN(index) || index < 0 || index >= TIMER_TEMPLATES.length) {
+    return c.redirect('/');
+  }
+
+  const input = buildFromTemplate(TIMER_TEMPLATES[index], new Date());
+  await repo.create(input);
+  return c.redirect('/');
+});
+
+app.post('/api/timers/:id/duplicate', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const timer = await repo.getById(c.req.param('id'));
+  if (!timer) return c.body(null, 404);
+
+  const input = buildDuplicateInput(timer);
+  await repo.create(input);
   return c.body(null, 200);
 });
 

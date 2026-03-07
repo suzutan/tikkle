@@ -43,6 +43,15 @@ export function buildDefaultForType(type: CreateTimerInput['type'], now: Date): 
   }
 }
 
+export function buildDuplicateInput(timer: Timer): CreateTimerInput {
+  const input = buildInitialState(timer);
+  input.name = `${timer.name}（コピー）`;
+  if (timer.tags && timer.tags.length > 0) {
+    input.tags = [...timer.tags];
+  }
+  return input;
+}
+
 export function buildFromTemplate(template: TimerTemplate, now: Date): CreateTimerInput {
   const isoNow = now.toISOString();
   const defaults = template.defaults;
