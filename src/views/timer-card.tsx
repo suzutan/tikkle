@@ -97,6 +97,54 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
         </div>
       </div>
 
+      {/* Quick actions for value-based timers */}
+      {(timer.type === 'stamina' || timer.type === 'periodic-increment') && !archived && (
+        <div class="mt-3 flex items-center gap-1.5 border-t border-gray-100 pt-3 dark:border-gray-700">
+          <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">値調整:</span>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"adjust-value","delta":"-1"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+            title="-1"
+          >-1</button>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"adjust-value","delta":"1"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+            title="+1"
+          >+1</button>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"adjust-value","delta":"10"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+            title="+10"
+          >+10</button>
+          <div class="flex-1"></div>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"reset-value"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40"
+            title="0にリセット"
+          >0</button>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"max-value"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-2 py-1 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40"
+            title="最大値にする"
+          >MAX</button>
+        </div>
+      )}
+
       <div
         x-show="showDeleteModal"
         x-cloak
@@ -181,6 +229,33 @@ export function TimerListItem({ timer, archived }: { timer: Timer; archived?: bo
           </div>
         </div>
       </div>
+
+      {/* Quick actions */}
+      {(timer.type === 'stamina' || timer.type === 'periodic-increment') && !archived && (
+        <div class="flex items-center gap-1">
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"adjust-value","delta":"-1"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-1.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >-1</button>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"adjust-value","delta":"1"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-1.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >+1</button>
+          <button
+            hx-post={`/api/timers/${timer.id}/quick-action`}
+            hx-vals='{"action":"adjust-value","delta":"10"}'
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded px-1.5 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >+10</button>
+        </div>
+      )}
 
       {/* Actions */}
       <div class="flex gap-1">
