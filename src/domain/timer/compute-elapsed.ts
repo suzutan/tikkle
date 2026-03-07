@@ -10,5 +10,6 @@ export function computeElapsed(
   return {
     type: 'elapsed',
     elapsedMs: Math.max(0, diff),
+    pendingMs: diff < 0 ? -diff : 0,
   };
 }

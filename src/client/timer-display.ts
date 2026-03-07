@@ -73,12 +73,18 @@ window.timerDisplay = function (json: string): TimerDisplayData {
           }
           break;
         case 'elapsed':
-          this.display = formatDuration(state.elapsedMs);
-          if (timer.type === 'elapsed') {
-            this.targetTime = `開始: ${formatDateTime(timer.startDate)}`;
+          if (state.pendingMs > 0) {
+            this.display = formatDuration(state.pendingMs);
+            this.subtext = '開始まで';
+            this.percentage = 0;
+          } else {
+            this.display = formatDuration(state.elapsedMs);
             // For elapsed timers, show progress towards 24 hours
             const hoursElapsed = state.elapsedMs / (60 * 60 * 1000);
             this.percentage = Math.min(100, (hoursElapsed / 24) * 100);
+          }
+          if (timer.type === 'elapsed') {
+            this.targetTime = `開始: ${formatDateTime(timer.startDate)}`;
           }
           break;
         case 'countdown-elapsed':

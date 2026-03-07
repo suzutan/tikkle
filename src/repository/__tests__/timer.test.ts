@@ -320,6 +320,7 @@ describe('toInsertValues', () => {
       currentValue: 50,
       maxValue: 100,
       recoveryIntervalMinutes: 5,
+      recoveryIntervalSeconds: null,
       lastUpdatedAt: '2026-01-01T00:00:00.000Z',
       tags: null,
       createdAt: '2026-01-01T00:00:00.000Z',

@@ -114,8 +114,8 @@ describe('checkNotification', () => {
       startDate: '2026-01-01T00:00:00.000Z',
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
-    const prev: TimerState = { type: 'elapsed', elapsedMs: 1000 };
-    const curr: TimerState = { type: 'elapsed', elapsedMs: 2000 };
+    const prev: TimerState = { type: 'elapsed', elapsedMs: 1000, pendingMs: 0 };
+    const curr: TimerState = { type: 'elapsed', elapsedMs: 2000, pendingMs: 0 };
 
     // When: 通知チェック
     const result = checkNotification(timer, curr, prev);
