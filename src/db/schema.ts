@@ -23,4 +23,6 @@ export const timers = sqliteTable('timers', {
   // periodic-increment
   incrementAmount: integer('increment_amount'),
   scheduleTimes: text('schedule_times'), // JSON array
+  // archive
+  archivedAt: text('archived_at'),
 });

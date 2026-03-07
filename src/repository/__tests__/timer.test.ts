@@ -21,6 +21,7 @@ describe('toTimer', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
 
     // When: toTimer を呼ぶ
@@ -56,6 +57,7 @@ describe('toTimer', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
 
     // When: toTimer を呼ぶ
@@ -91,6 +93,7 @@ describe('toTimer', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
 
     // When: toTimer を呼ぶ
@@ -126,6 +129,7 @@ describe('toTimer', () => {
       recoveryIntervalSeconds: null,
       incrementAmount: null,
       scheduleTimes: null,
+      archivedAt: null,
     };
 
     // When: toTimer を呼ぶ
@@ -164,6 +168,7 @@ describe('toTimer', () => {
       startDate: null,
       recoveryIntervalMinutes: null,
       recoveryIntervalSeconds: null,
+      archivedAt: null,
     };
 
     // When: toTimer を呼ぶ
@@ -203,10 +208,39 @@ describe('toTimer', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
 
     // When/Then: toTimer を呼ぶとエラーが投げられる
     expect(() => toTimer(row)).toThrow('Unknown timer type: unknown');
+  });
+
+  test('archivedAt が設定されたタイマーを正しく変換できる', () => {
+    // Given: archivedAt が設定された countdown timer row
+    const row = {
+      id: 'timer-7',
+      name: 'Archived Timer',
+      type: 'countdown' as const,
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      startDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+      archivedAt: '2026-06-01T00:00:00.000Z',
+    };
+
+    // When: toTimer を呼ぶ
+    const timer = toTimer(row);
+
+    // Then: archivedAt が設定されている
+    expect(timer.archivedAt).toBe('2026-06-01T00:00:00.000Z');
   });
 });
 
@@ -480,6 +514,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
     mockDbInstance.limit.mockResolvedValue([mockRow]);
 
@@ -527,6 +562,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
     mockDbInstance.values.mockResolvedValue(undefined);
     mockDbInstance.limit.mockResolvedValue([mockCreatedRow]);
@@ -577,6 +613,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
     const updatedRow = { ...existingRow, name: 'Updated Timer', targetDate: '2027-06-30T00:00:00.000Z' };
     mockDbInstance.limit
@@ -625,6 +662,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
     mockDbInstance.limit.mockResolvedValueOnce([existingRow]);
 
@@ -652,6 +690,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
     const updatedRow = { ...existingRow, startDate: '2026-02-01T00:00:00.000Z' };
     mockDbInstance.limit
@@ -687,6 +726,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       lastUpdatedAt: null,
+      archivedAt: null,
     };
     const updatedRow = { ...existingRow, targetDate: '2027-06-30T00:00:00.000Z' };
     mockDbInstance.limit
@@ -779,5 +819,172 @@ describe('D1TimerRepository', () => {
     // Then: タイマーが更新される
     expect(timer).toBeDefined();
     expect(mockDbInstance.update).toHaveBeenCalled();
+  });
+
+  test('archive でタイマーをアーカイブできる', async () => {
+    // Given: DBにタイマーが存在する
+    const existingRow = {
+      id: 'timer-1',
+      name: 'Active Timer',
+      type: 'countdown' as const,
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      startDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+      archivedAt: null,
+    };
+    const archivedRow = { ...existingRow, archivedAt: '2026-06-01T00:00:00.000Z' };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([existingRow])   // getById (existing check)
+      .mockResolvedValueOnce([archivedRow]);   // getById (after archive)
+
+    // When: archive を呼ぶ
+    const timer = await repo.archive('timer-1');
+
+    // Then: タイマーがアーカイブされる
+    expect(timer).toBeDefined();
+    expect(timer.archivedAt).toBeDefined();
+    expect(mockDbInstance.update).toHaveBeenCalled();
+    expect(mockDbInstance.set).toHaveBeenCalled();
+  });
+
+  test('archive でタイマーが存在しない場合はエラーを投げる', async () => {
+    // Given: DBにタイマーが存在しない
+    mockDbInstance.limit.mockResolvedValueOnce([]);
+
+    // When/Then: archive を呼ぶとエラーが投げられる
+    await expect(repo.archive('non-existent')).rejects.toThrow('Timer not found');
+  });
+
+  test('unarchive でタイマーを復元できる', async () => {
+    // Given: DBにアーカイブ済みタイマーが存在する
+    const archivedRow = {
+      id: 'timer-1',
+      name: 'Archived Timer',
+      type: 'countdown' as const,
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      startDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+      archivedAt: '2026-06-01T00:00:00.000Z',
+    };
+    const unarchivedRow = { ...archivedRow, archivedAt: null };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([archivedRow])    // getById (existing check)
+      .mockResolvedValueOnce([unarchivedRow]); // getById (after unarchive)
+
+    // When: unarchive を呼ぶ
+    const timer = await repo.unarchive('timer-1');
+
+    // Then: タイマーが復元される
+    expect(timer).toBeDefined();
+    expect(timer.archivedAt).toBeUndefined();
+    expect(mockDbInstance.update).toHaveBeenCalled();
+  });
+
+  test('unarchive でタイマーが存在しない場合はエラーを投げる', async () => {
+    // Given: DBにタイマーが存在しない
+    mockDbInstance.limit.mockResolvedValueOnce([]);
+
+    // When/Then: unarchive を呼ぶとエラーが投げられる
+    await expect(repo.unarchive('non-existent')).rejects.toThrow('Timer not found');
+  });
+
+  test('getAll でアーカイブ済みタイマーを除外できる', async () => {
+    // Given: DBにアクティブとアーカイブ済みのタイマーがある
+    const mockRows = [
+      {
+        id: 'timer-1',
+        name: 'Active Timer',
+        type: 'countdown' as const,
+        targetDate: '2026-12-31T00:00:00.000Z',
+        tags: null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        startDate: null,
+        currentValue: null,
+        maxValue: null,
+        recoveryIntervalMinutes: null,
+        recoveryIntervalSeconds: null,
+        incrementAmount: null,
+        scheduleTimes: null,
+        lastUpdatedAt: null,
+        archivedAt: null,
+      },
+    ];
+    mockDbInstance.orderBy.mockResolvedValueOnce(mockRows);
+
+    // When: getAll を呼ぶ（デフォルトはアーカイブ除外）
+    const timers = await repo.getAll();
+
+    // Then: アクティブタイマーのみ返される
+    expect(timers).toHaveLength(1);
+    expect(timers[0].name).toBe('Active Timer');
+    expect(mockDbInstance.where).toHaveBeenCalled();
+  });
+
+  test('getAll({ includeArchived: true }) で全タイマーを取得できる', async () => {
+    // Given: DBにアクティブとアーカイブ済みのタイマーがある
+    const mockRows = [
+      {
+        id: 'timer-1',
+        name: 'Active Timer',
+        type: 'countdown' as const,
+        targetDate: '2026-12-31T00:00:00.000Z',
+        tags: null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        startDate: null,
+        currentValue: null,
+        maxValue: null,
+        recoveryIntervalMinutes: null,
+        recoveryIntervalSeconds: null,
+        incrementAmount: null,
+        scheduleTimes: null,
+        lastUpdatedAt: null,
+        archivedAt: null,
+      },
+      {
+        id: 'timer-2',
+        name: 'Archived Timer',
+        type: 'elapsed' as const,
+        startDate: '2026-01-01T00:00:00.000Z',
+        tags: null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        targetDate: null,
+        currentValue: null,
+        maxValue: null,
+        recoveryIntervalMinutes: null,
+        recoveryIntervalSeconds: null,
+        incrementAmount: null,
+        scheduleTimes: null,
+        lastUpdatedAt: null,
+        archivedAt: '2026-06-01T00:00:00.000Z',
+      },
+    ];
+    mockDbInstance.orderBy.mockResolvedValueOnce(mockRows);
+
+    // When: getAll を includeArchived: true で呼ぶ
+    const timers = await repo.getAll({ includeArchived: true });
+
+    // Then: 全タイマーが返される
+    expect(timers).toHaveLength(2);
   });
 });

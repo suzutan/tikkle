@@ -21,13 +21,14 @@ app.use(renderer);
 app.get('/', async (c) => {
   const repo = new D1TimerRepository(c.env.DB);
   const timers = await repo.getAll();
+  const archivedTimers = await repo.getArchived();
 
   // Extract all unique tags from timers
   const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
 
   return c.render(
     <div
-      x-data="{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), typeSearch: '', tagSearch: '' }"
+      x-data="{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), typeSearch: '', tagSearch: '', showArchived: false }"
       x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v))"
     >
       <div class="mb-6">
@@ -250,6 +251,46 @@ app.get('/', async (c) => {
           );
         })}
       </div>
+
+      {/* Archived timers section */}
+      {archivedTimers.length > 0 && (
+        <div class="mt-8">
+          <button
+            x-on:click="showArchived = !showArchived"
+            class="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-4 w-4 transition-transform"
+              x-bind:class="showArchived ? 'rotate-90' : ''"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+            アーカイブ済み ({archivedTimers.length})
+          </button>
+
+          <div x-show="showArchived" x-cloak class="mt-4">
+            <div x-show="viewMode === 'card'" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {archivedTimers.map((timer) => (
+                <div data-timer-card>
+                  <TimerCard timer={timer} archived />
+                </div>
+              ))}
+            </div>
+            <div x-show="viewMode === 'list'" class="space-y-2">
+              {archivedTimers.map((timer) => (
+                <div data-timer-card>
+                  <TimerListItem timer={timer} archived />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
   );
 });
@@ -373,6 +414,26 @@ app.delete('/api/timers/:id', async (c) => {
     await repo.delete(c.req.param('id'));
   } catch {
     // already deleted
+  }
+  return c.body(null, 200);
+});
+
+app.post('/api/timers/:id/archive', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  try {
+    await repo.archive(c.req.param('id'));
+  } catch {
+    return c.body(null, 404);
+  }
+  return c.body(null, 200);
+});
+
+app.post('/api/timers/:id/unarchive', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  try {
+    await repo.unarchive(c.req.param('id'));
+  } catch {
+    return c.body(null, 404);
   }
   return c.body(null, 200);
 });
