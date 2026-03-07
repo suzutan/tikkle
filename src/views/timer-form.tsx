@@ -4,7 +4,7 @@ import { isoToDatetimeLocal } from '../lib/timezone';
 
 const TIMER_TYPES = Object.keys(TIMER_TYPE_LABELS) as Array<keyof typeof TIMER_TYPE_LABELS>;
 
-export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] }) {
+export function TimerForm({ timer, errors, allTags }: { timer?: Timer; errors?: string[]; allTags?: string[] }) {
   const isEdit = !!timer;
   const action = isEdit ? `/api/timers/${timer!.id}` : '/api/timers';
   const method = isEdit ? 'put' : 'post';
@@ -60,15 +60,32 @@ export function TimerForm({ timer, errors }: { timer?: Timer; errors?: string[] 
           />
         </div>
 
-        <div class="mb-4">
+        <div class="mb-4" x-data={`{ tagInput: '${timer?.tags ? timer.tags.join(', ') : ''}', showSuggestions: false, allTags: ${JSON.stringify(allTags || [])}, get suggestions() { const parts = this.tagInput.split(','); const current = (parts[parts.length - 1] || '').trim().toLowerCase(); if (!current) return []; const existing = parts.slice(0, -1).map(t => t.trim().toLowerCase()); return this.allTags.filter(t => t.toLowerCase().includes(current) && !existing.includes(t.toLowerCase())); } }`} {...{ 'x-on:click.outside': 'showSuggestions = false' }}>
           <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">タグ（オプション）</label>
-          <input
-            type="text"
-            name="tags"
-            value={timer?.tags ? timer.tags.join(', ') : ''}
-            placeholder="例: 仕事, 重要, プロジェクトA"
-            class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-          />
+          <div class="relative">
+            <input
+              type="text"
+              name="tags"
+              x-model="tagInput"
+              x-on:focus="showSuggestions = true"
+              x-on:input="showSuggestions = true"
+              placeholder="例: 仕事, 重要, プロジェクトA"
+              autocomplete="off"
+              class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            />
+            <div x-show="showSuggestions && suggestions.length > 0" x-cloak class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+              <div class="max-h-40 overflow-y-auto p-1">
+                {/* Tag suggestions rendered by Alpine.js */}
+                <template x-for="tag in suggestions" x-bind:key="tag">
+                  <div
+                    x-text="tag"
+                    x-on:click={`(() => { const parts = tagInput.split(','); parts[parts.length - 1] = ' ' + tag; tagInput = parts.join(','); showSuggestions = false; })()`}
+                    class="cursor-pointer rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
+                  ></div>
+                </template>
+              </div>
+            </div>
+          </div>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">カンマ区切りで複数のタグを入力できます</p>
         </div>
 
