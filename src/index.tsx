@@ -470,6 +470,20 @@ app.post('/api/timers', async (c) => {
   return c.redirect('/');
 });
 
+app.post('/api/timers/from-template', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const body = await c.req.parseBody() as Record<string, string>;
+  const index = Number(body.templateIndex);
+
+  if (Number.isNaN(index) || index < 0 || index >= TIMER_TEMPLATES.length) {
+    return c.redirect('/');
+  }
+
+  const input = buildFromTemplate(TIMER_TEMPLATES[index], new Date());
+  await repo.create(input);
+  return c.redirect('/');
+});
+
 app.post('/api/timers/:id', async (c) => {
   const repo = new D1TimerRepository(c.env.DB);
   const body = await c.req.parseBody() as Record<string, string>;
@@ -535,20 +549,6 @@ app.post('/api/timers/:id/quick-action', async (c) => {
   }
 
   return c.body(null, 200);
-});
-
-app.post('/api/timers/from-template', async (c) => {
-  const repo = new D1TimerRepository(c.env.DB);
-  const body = await c.req.parseBody() as Record<string, string>;
-  const index = Number(body.templateIndex);
-
-  if (Number.isNaN(index) || index < 0 || index >= TIMER_TEMPLATES.length) {
-    return c.redirect('/');
-  }
-
-  const input = buildFromTemplate(TIMER_TEMPLATES[index], new Date());
-  await repo.create(input);
-  return c.redirect('/');
 });
 
 app.post('/api/timers/:id/duplicate', async (c) => {
