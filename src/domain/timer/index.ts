@@ -1,6 +1,8 @@
 export { computeTimerState } from './compute';
 export { formatDuration, formatDurationCompact, formatFraction } from './format';
 export { createTimerSchema } from './validation';
+export { getUrgencyLevel, compareByUrgency } from './urgency';
+export type { UrgencyLevel } from './urgency';
 
 export type {
   Timer,
