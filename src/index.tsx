@@ -39,8 +39,8 @@ app.get('/', async (c) => {
 
   return c.render(
     <div
-      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${JSON.stringify(urgencyMap)} }`}
-      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v))"
+      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${JSON.stringify(urgencyMap)} }`}
+      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v)); $watch('searchQuery', v => syncFilterToUrl('q', v ? [v] : []))"
     >
       <div class="mb-6">
         <div class="flex items-center justify-between mb-4">
@@ -76,6 +76,21 @@ app.get('/', async (c) => {
           >
             新規作成
           </a>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div class="mb-3">
+          <div class="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              x-model="searchQuery"
+              placeholder="タイマー名・タグで検索..."
+              class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500"
+            />
           </div>
         </div>
 
@@ -230,8 +245,8 @@ app.get('/', async (c) => {
           <div class="flex items-end">
             <button
               type="button"
-              x-on:click="filterType = []; filterTags = []; filterUrgency = []; typeSearch = ''; tagSearch = ''"
-              x-show="filterType.length > 0 || filterTags.length > 0 || filterUrgency.length > 0"
+              x-on:click="filterType = []; filterTags = []; filterUrgency = []; searchQuery = ''; typeSearch = ''; tagSearch = ''"
+              x-show="filterType.length > 0 || filterTags.length > 0 || filterUrgency.length > 0 || searchQuery"
               class="rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             >
               クリア
@@ -253,6 +268,7 @@ app.get('/', async (c) => {
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
                 if (filterUrgency.length > 0 && !filterUrgency.includes(urgencyMap[timer.id])) return false;
+                if (searchQuery) { const q = searchQuery.toLowerCase(); if (!timer.name.toLowerCase().includes(q) && !(timer.tags || []).some(t => t.toLowerCase().includes(q))) return false; }
                 return true;
               })()`}
               x-data="{ timer: ${timerJson} }"
@@ -276,6 +292,7 @@ app.get('/', async (c) => {
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
                 if (filterUrgency.length > 0 && !filterUrgency.includes(urgencyMap[timer.id])) return false;
+                if (searchQuery) { const q = searchQuery.toLowerCase(); if (!timer.name.toLowerCase().includes(q) && !(timer.tags || []).some(t => t.toLowerCase().includes(q))) return false; }
                 return true;
               })()`}
             >
@@ -328,8 +345,11 @@ app.get('/', async (c) => {
   );
 });
 
-app.get('/timers/new', (c) => {
-  return c.render(<TimerForm />, { title: '新規作成' });
+app.get('/timers/new', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const timers = await repo.getAll({ includeArchived: true });
+  const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
+  return c.render(<TimerForm allTags={allTags} />, { title: '新規作成' });
 });
 
 app.get('/timers/:id/edit', async (c) => {
@@ -342,7 +362,9 @@ app.get('/timers/:id/edit', async (c) => {
       </div>,
     );
   }
-  return c.render(<TimerForm timer={timer} />, { title: '編集' });
+  const timers = await repo.getAll({ includeArchived: true });
+  const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
+  return c.render(<TimerForm timer={timer} allTags={allTags} />, { title: '編集' });
 });
 
 // --- API ---
