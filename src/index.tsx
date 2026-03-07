@@ -3,6 +3,7 @@ import { renderer } from './renderer';
 import { D1TimerRepository } from './repository/timer';
 import { createTimerSchema } from './domain/timer/validation';
 import { getUrgencyLevel, compareByUrgency } from './domain/timer/urgency';
+import { applyQuickAction } from './domain/timer/quick-actions';
 import { datetimeLocalToISO } from './lib/timezone';
 import { TimerCard, TimerCardEmpty, TimerListItem } from './views/timer-card';
 import { TimerForm } from './views/timer-form';
@@ -447,6 +448,37 @@ app.delete('/api/timers/:id', async (c) => {
   } catch {
     // already deleted
   }
+  return c.body(null, 200);
+});
+
+app.post('/api/timers/:id/quick-action', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const timer = await repo.getById(c.req.param('id'));
+  if (!timer) return c.body(null, 404);
+
+  const body = await c.req.parseBody() as Record<string, string>;
+  const actionType = body.action;
+
+  try {
+    let result;
+    if (actionType === 'adjust-value') {
+      result = applyQuickAction(timer, { action: 'adjust-value', delta: Number(body.delta) }, new Date());
+    } else if (actionType === 'reset-value') {
+      result = applyQuickAction(timer, { action: 'reset-value' }, new Date());
+    } else if (actionType === 'max-value') {
+      result = applyQuickAction(timer, { action: 'max-value' }, new Date());
+    } else {
+      return c.body(null, 400);
+    }
+
+    await repo.update(timer.id, {
+      type: timer.type,
+      ...result,
+    } as any);
+  } catch {
+    return c.body(null, 400);
+  }
+
   return c.body(null, 200);
 });
 
