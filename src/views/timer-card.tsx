@@ -5,7 +5,7 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
   const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
 
   return (
-    <div class={`group rounded-2xl border p-6 shadow-lg transition-all hover:shadow-xl ${archived ? 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 dark:border-gray-600 dark:from-gray-850 dark:to-gray-900' : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900'}`} x-data="{ showDeleteModal: false }">
+    <div class={`group flex h-full flex-col rounded-2xl border p-6 shadow-lg transition-all hover:shadow-xl ${archived ? 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 dark:border-gray-600 dark:from-gray-850 dark:to-gray-900' : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900'}`} x-data="{ showDeleteModal: false }">
       <div class="mb-4 flex items-start justify-between">
         <div class="flex-1">
           <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{timer.name}</h3>
@@ -79,7 +79,7 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
           </button>
         </div>
       </div>
-      <div x-data={`timerDisplay('${timerJson}')`}>
+      <div class="flex-1" x-data={`timerDisplay('${timerJson}')`}>
         <div class="space-y-2">
           <p
             class="font-timer text-3xl font-bold tabular-nums leading-none"
@@ -110,7 +110,7 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
 
       {/* Quick actions for value-based timers */}
       {(timer.type === 'stamina' || timer.type === 'periodic-increment') && !archived && (
-        <div class="mt-3 flex items-center gap-1.5 border-t border-gray-100 pt-3 dark:border-gray-700">
+        <div class="mt-auto flex items-center gap-1.5 border-t border-gray-100 pt-3 dark:border-gray-700">
           <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">値調整:</span>
           <button
             hx-post={`/api/timers/${timer.id}/quick-action`}
