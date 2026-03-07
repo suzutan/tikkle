@@ -1,6 +1,7 @@
 import { computeTimerState } from '../domain/timer/compute';
 import { formatDuration, formatFraction, formatDateTime } from '../domain/timer/format';
-import type { Timer } from '../domain/timer/types';
+import { checkNotification } from '../domain/timer/notification';
+import type { Timer, TimerState } from '../domain/timer/types';
 
 interface TimerDisplayData {
   display: string;
@@ -29,6 +30,7 @@ declare global {
 
 window.timerDisplay = function (json: string): TimerDisplayData {
   const timer: Timer = JSON.parse(json);
+  let prevState: TimerState | null = null;
 
   return {
     display: '',
@@ -45,6 +47,15 @@ window.timerDisplay = function (json: string): TimerDisplayData {
     update() {
       const state = computeTimerState(timer, new Date());
       const now = Date.now();
+
+      // Check for notification trigger
+      if (prevState && window.Notification && Notification.permission === 'granted') {
+        const check = checkNotification(timer, state, prevState);
+        if (check.shouldNotify) {
+          new Notification(check.title, { body: check.body });
+        }
+      }
+      prevState = state;
 
       switch (state.type) {
         case 'countdown':
@@ -190,6 +201,51 @@ window.darkMode = function (): DarkModeData {
       } else {
         document.documentElement.classList.remove('dark');
       }
+    },
+  };
+};
+
+// Notification toggle
+interface NotificationToggleData {
+  isSupported: boolean;
+  isEnabled: boolean;
+  init(): void;
+  toggle(): void;
+}
+
+declare global {
+  interface Window {
+    notificationToggle: () => NotificationToggleData;
+  }
+}
+
+window.notificationToggle = function (): NotificationToggleData {
+  return {
+    isSupported: false,
+    isEnabled: false,
+
+    init() {
+      this.isSupported = 'Notification' in window;
+      this.isEnabled = this.isSupported && Notification.permission === 'granted';
+    },
+
+    async toggle() {
+      if (!this.isSupported) return;
+
+      if (Notification.permission === 'granted') {
+        // Already granted - no browser API to revoke, just inform user
+        this.isEnabled = true;
+        return;
+      }
+
+      if (Notification.permission === 'denied') {
+        // Denied - can't request again
+        return;
+      }
+
+      // Request permission
+      const result = await Notification.requestPermission();
+      this.isEnabled = result === 'granted';
     },
   };
 };
