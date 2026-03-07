@@ -79,7 +79,7 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
           </button>
         </div>
       </div>
-      <div class="flex-1" x-data={`timerDisplay('${timerJson}')`}>
+      <div class="flex flex-1 flex-col" x-data={`timerDisplay('${timerJson}')`}>
         <div class="space-y-2">
           <p
             class="font-timer text-3xl font-bold tabular-nums leading-none"
@@ -90,7 +90,7 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
           <p x-show="targetTime" x-text="targetTime" class="whitespace-pre-line text-xs text-gray-400 dark:text-gray-500"></p>
         </div>
         {/* Progress bar */}
-        <div x-show="percentage >= 0" class="mt-3">
+        <div x-show="percentage >= 0" class="mt-auto pt-3">
           <div class="mb-1 flex items-center justify-end">
             <span
               class="font-timer text-xs font-semibold"
