@@ -4,6 +4,7 @@ interface TimerBase {
   tags?: string[]; // Optional array of tag strings
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string; // ISO datetime when archived, undefined if active
 }
 
 export interface CountdownTimer extends TimerBase {

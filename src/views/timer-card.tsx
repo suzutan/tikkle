@@ -1,11 +1,11 @@
 import type { Timer } from '../domain/timer/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
 
-export function TimerCard({ timer }: { timer: Timer }) {
+export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolean }) {
   const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
 
   return (
-    <div class="group rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:from-gray-800 dark:to-gray-900" x-data="{ showDeleteModal: false }">
+    <div class={`group rounded-2xl border p-6 shadow-lg transition-all hover:shadow-xl ${archived ? 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 dark:border-gray-600 dark:from-gray-850 dark:to-gray-900' : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900'}`} x-data="{ showDeleteModal: false }">
       <div class="mb-4 flex items-start justify-between">
         <div class="flex-1">
           <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{timer.name}</h3>
@@ -21,15 +21,42 @@ export function TimerCard({ timer }: { timer: Timer }) {
           )}
         </div>
         <div class="flex gap-1.5">
-          <a
-            href={`/timers/${timer.id}/edit`}
-            class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-            title="編集"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-            </svg>
-          </a>
+          {archived ? (
+            <button
+              hx-post={`/api/timers/${timer.id}/unarchive`}
+              hx-swap="none"
+              {...{ 'hx-on::after-request': 'window.location.reload()' }}
+              class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600 dark:text-gray-500 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+              title="復元"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+            </button>
+          ) : (
+            <>
+              <a
+                href={`/timers/${timer.id}/edit`}
+                class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                title="編集"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+              </a>
+              <button
+                hx-post={`/api/timers/${timer.id}/archive`}
+                hx-swap="none"
+                {...{ 'hx-on::after-request': 'window.location.reload()' }}
+                class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-yellow-50 hover:text-yellow-600 dark:text-gray-500 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400"
+                title="アーカイブ"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+              </button>
+            </>
+          )}
           <button
             x-on:click="showDeleteModal = true"
             class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-gray-500 dark:hover:bg-red-900/30 dark:hover:text-red-400"
@@ -112,11 +139,11 @@ export function TimerCardEmpty() {
   );
 }
 
-export function TimerListItem({ timer }: { timer: Timer }) {
+export function TimerListItem({ timer, archived }: { timer: Timer; archived?: boolean }) {
   const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
 
   return (
-    <div class="group rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800" x-data="{ showDeleteModal: false }">
+    <div class={`group rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:bg-gray-800 ${archived ? 'border-gray-300 opacity-75 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'}`} x-data="{ showDeleteModal: false }">
       <div class="flex items-center gap-4">
       {/* Timer info */}
       <div class="flex-1 min-w-0" x-data={`timerDisplay('${timerJson}')`}>
@@ -157,15 +184,42 @@ export function TimerListItem({ timer }: { timer: Timer }) {
 
       {/* Actions */}
       <div class="flex gap-1">
-        <a
-          href={`/timers/${timer.id}/edit`}
-          class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-          title="編集"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-          </svg>
-        </a>
+        {archived ? (
+          <button
+            hx-post={`/api/timers/${timer.id}/unarchive`}
+            hx-swap="none"
+            {...{ 'hx-on::after-request': 'window.location.reload()' }}
+            class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600 dark:text-gray-500 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+            title="復元"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg>
+          </button>
+        ) : (
+          <>
+            <a
+              href={`/timers/${timer.id}/edit`}
+              class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              title="編集"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+              </svg>
+            </a>
+            <button
+              hx-post={`/api/timers/${timer.id}/archive`}
+              hx-swap="none"
+              {...{ 'hx-on::after-request': 'window.location.reload()' }}
+              class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-yellow-50 hover:text-yellow-600 dark:text-gray-500 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400"
+              title="アーカイブ"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+            </button>
+          </>
+        )}
         <button
           x-on:click="showDeleteModal = true"
           class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-gray-500 dark:hover:bg-red-900/30 dark:hover:text-red-400"

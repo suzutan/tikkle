@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNull, isNotNull } from 'drizzle-orm';
 import { drizzle, DrizzleD1Database } from 'drizzle-orm/d1';
 import { timers } from '../db/schema';
 import type { Timer, CreateTimerInput, UpdateTimerInput } from '../domain/timer/types';
@@ -13,6 +13,7 @@ export function toTimer(row: TimerRow): Timer {
     tags: row.tags ? JSON.parse(row.tags) : undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    archivedAt: row.archivedAt ?? undefined,
   };
 
   switch (row.type) {
@@ -90,8 +91,18 @@ export class D1TimerRepository {
     this.db = drizzle(d1);
   }
 
-  async getAll(): Promise<Timer[]> {
-    const rows = await this.db.select().from(timers).orderBy(desc(timers.createdAt));
+  async getAll(opts?: { includeArchived?: boolean }): Promise<Timer[]> {
+    const query = this.db.select().from(timers);
+    if (!opts?.includeArchived) {
+      const rows = await query.where(isNull(timers.archivedAt)).orderBy(desc(timers.createdAt));
+      return rows.map(toTimer);
+    }
+    const rows = await query.orderBy(desc(timers.createdAt));
+    return rows.map(toTimer);
+  }
+
+  async getArchived(): Promise<Timer[]> {
+    const rows = await this.db.select().from(timers).where(isNotNull(timers.archivedAt)).orderBy(desc(timers.createdAt));
     return rows.map(toTimer);
   }
 
@@ -155,5 +166,20 @@ export class D1TimerRepository {
   async delete(id: string): Promise<void> {
     const result = await this.db.delete(timers).where(eq(timers.id, id)).returning();
     if (result.length === 0) throw new Error(`Timer not found: ${id}`);
+  }
+
+  async archive(id: string): Promise<Timer> {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error(`Timer not found: ${id}`);
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ archivedAt: now }).where(eq(timers.id, id));
+    return (await this.getById(id))!;
+  }
+
+  async unarchive(id: string): Promise<Timer> {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error(`Timer not found: ${id}`);
+    await this.db.update(timers).set({ archivedAt: null }).where(eq(timers.id, id));
+    return (await this.getById(id))!;
   }
 }
