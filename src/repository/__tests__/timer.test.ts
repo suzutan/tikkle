@@ -327,6 +327,31 @@ describe('toInsertValues', () => {
     });
   });
 
+  test('countdown-elapsed timer の insert values を正しく作成できる', () => {
+    // Given: countdown-elapsed timer input
+    const input: CreateTimerInput = {
+      name: 'New Countdown-Elapsed',
+      type: 'countdown-elapsed',
+      targetDate: '2026-12-31T00:00:00.000Z',
+    };
+    const id = 'new-timer-6';
+    const now = '2026-01-01T00:00:00.000Z';
+
+    // When: toInsertValues を呼ぶ
+    const values = toInsertValues(input, id, now);
+
+    // Then: insert values が返される
+    expect(values).toEqual({
+      id: 'new-timer-6',
+      name: 'New Countdown-Elapsed',
+      type: 'countdown-elapsed',
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+  });
+
   test('tags が空配列の場合は null になる', () => {
     // Given: countdown timer input with empty tags
     const input: CreateTimerInput = {
@@ -532,5 +557,227 @@ describe('D1TimerRepository', () => {
 
     // When/Then: delete を呼ぶとエラーが投げられる
     await expect(repo.delete('non-existent')).rejects.toThrow('Timer not found');
+  });
+
+  test('update でcountdownタイマーを更新できる', async () => {
+    // Given: DBにcountdownタイマーが存在する
+    const existingRow = {
+      id: 'timer-1',
+      name: 'Existing Timer',
+      type: 'countdown' as const,
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      startDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+    };
+    const updatedRow = { ...existingRow, name: 'Updated Timer', targetDate: '2027-06-30T00:00:00.000Z' };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([existingRow])  // getById (existing)
+      .mockResolvedValueOnce([updatedRow]);  // getById (after update)
+
+    // When: update を呼ぶ
+    const timer = await repo.update('timer-1', {
+      type: 'countdown',
+      name: 'Updated Timer',
+      targetDate: '2027-06-30T00:00:00.000Z',
+    });
+
+    // Then: タイマーが更新される
+    expect(timer).toBeDefined();
+    expect(timer.name).toBe('Updated Timer');
+    expect(mockDbInstance.update).toHaveBeenCalled();
+    expect(mockDbInstance.set).toHaveBeenCalled();
+  });
+
+  test('update でタイマーが存在しない場合はエラーを投げる', async () => {
+    // Given: DBにタイマーが存在しない
+    mockDbInstance.limit.mockResolvedValueOnce([]);
+
+    // When/Then: update を呼ぶとエラーが投げられる
+    await expect(
+      repo.update('non-existent', { type: 'countdown', name: 'Updated' }),
+    ).rejects.toThrow('Timer not found');
+  });
+
+  test('update でタイプが異なる場合はエラーを投げる', async () => {
+    // Given: DBにcountdownタイマーが存在するが、elapsedとして更新しようとする
+    const existingRow = {
+      id: 'timer-1',
+      name: 'Existing Timer',
+      type: 'countdown' as const,
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      startDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+    };
+    mockDbInstance.limit.mockResolvedValueOnce([existingRow]);
+
+    // When/Then: タイプ不一致でエラーが投げられる
+    await expect(
+      repo.update('timer-1', { type: 'elapsed', name: 'Updated' }),
+    ).rejects.toThrow('Timer type mismatch');
+  });
+
+  test('update でelapsedタイマーを更新できる', async () => {
+    // Given: DBにelapsedタイマーが存在する
+    const existingRow = {
+      id: 'timer-2',
+      name: 'Elapsed Timer',
+      type: 'elapsed' as const,
+      startDate: '2026-01-01T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      targetDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+    };
+    const updatedRow = { ...existingRow, startDate: '2026-02-01T00:00:00.000Z' };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([existingRow])
+      .mockResolvedValueOnce([updatedRow]);
+
+    // When: update を呼ぶ
+    const timer = await repo.update('timer-2', {
+      type: 'elapsed',
+      startDate: '2026-02-01T00:00:00.000Z',
+    });
+
+    // Then: タイマーが更新される
+    expect(timer).toBeDefined();
+    expect(mockDbInstance.update).toHaveBeenCalled();
+  });
+
+  test('update でcountdown-elapsedタイマーを更新できる', async () => {
+    // Given: DBにcountdown-elapsedタイマーが存在する
+    const existingRow = {
+      id: 'timer-3',
+      name: 'Countdown-Elapsed Timer',
+      type: 'countdown-elapsed' as const,
+      targetDate: '2026-12-31T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      startDate: null,
+      currentValue: null,
+      maxValue: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+      lastUpdatedAt: null,
+    };
+    const updatedRow = { ...existingRow, targetDate: '2027-06-30T00:00:00.000Z' };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([existingRow])
+      .mockResolvedValueOnce([updatedRow]);
+
+    // When: update を呼ぶ
+    const timer = await repo.update('timer-3', {
+      type: 'countdown-elapsed',
+      targetDate: '2027-06-30T00:00:00.000Z',
+    });
+
+    // Then: タイマーが更新される
+    expect(timer).toBeDefined();
+    expect(mockDbInstance.update).toHaveBeenCalled();
+  });
+
+  test('update でstaminaタイマーを更新できる', async () => {
+    // Given: DBにstaminaタイマーが存在する
+    const existingRow = {
+      id: 'timer-4',
+      name: 'Stamina Timer',
+      type: 'stamina' as const,
+      currentValue: 50,
+      maxValue: 100,
+      recoveryIntervalMinutes: 5,
+      lastUpdatedAt: '2026-01-01T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      targetDate: null,
+      startDate: null,
+      recoveryIntervalSeconds: null,
+      incrementAmount: null,
+      scheduleTimes: null,
+    };
+    const updatedRow = { ...existingRow, currentValue: 80 };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([existingRow])
+      .mockResolvedValueOnce([updatedRow]);
+
+    // When: update を呼ぶ
+    const timer = await repo.update('timer-4', {
+      type: 'stamina',
+      currentValue: 80,
+      maxValue: 100,
+      recoveryIntervalMinutes: 5,
+      lastUpdatedAt: '2026-01-02T00:00:00.000Z',
+    });
+
+    // Then: タイマーが更新される
+    expect(timer).toBeDefined();
+    expect(mockDbInstance.update).toHaveBeenCalled();
+  });
+
+  test('update でperiodic-incrementタイマーを更新できる', async () => {
+    // Given: DBにperiodic-incrementタイマーが存在する
+    const existingRow = {
+      id: 'timer-5',
+      name: 'Periodic Timer',
+      type: 'periodic-increment' as const,
+      currentValue: 30,
+      maxValue: 100,
+      incrementAmount: 10,
+      scheduleTimes: '["06:00","12:00","18:00"]',
+      lastUpdatedAt: '2026-01-01T00:00:00.000Z',
+      tags: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      targetDate: null,
+      startDate: null,
+      recoveryIntervalMinutes: null,
+      recoveryIntervalSeconds: null,
+    };
+    const updatedRow = { ...existingRow, currentValue: 40 };
+    mockDbInstance.limit
+      .mockResolvedValueOnce([existingRow])
+      .mockResolvedValueOnce([updatedRow]);
+
+    // When: update を呼ぶ
+    const timer = await repo.update('timer-5', {
+      type: 'periodic-increment',
+      currentValue: 40,
+      maxValue: 100,
+      incrementAmount: 10,
+      scheduleTimes: ['06:00', '12:00', '18:00'],
+      lastUpdatedAt: '2026-01-02T00:00:00.000Z',
+    });
+
+    // Then: タイマーが更新される
+    expect(timer).toBeDefined();
+    expect(mockDbInstance.update).toHaveBeenCalled();
   });
 });
