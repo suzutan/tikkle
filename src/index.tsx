@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { renderer } from './renderer';
 import { D1TimerRepository } from './repository/timer';
 import { createTimerSchema } from './domain/timer/validation';
+import { getUrgencyLevel, compareByUrgency } from './domain/timer/urgency';
 import { datetimeLocalToISO } from './lib/timezone';
 import { TimerCard, TimerCardEmpty, TimerListItem } from './views/timer-card';
 import { TimerForm } from './views/timer-form';
@@ -22,14 +23,23 @@ app.get('/', async (c) => {
   const repo = new D1TimerRepository(c.env.DB);
   const timers = await repo.getAll();
   const archivedTimers = await repo.getArchived();
+  const now = new Date();
+
+  // Sort by urgency (overdue > today > soon > normal)
+  const sortedTimers = [...timers].sort((a, b) => compareByUrgency(a, b, now));
+
+  // Compute urgency map for client-side filtering
+  const urgencyMap = Object.fromEntries(
+    timers.map(t => [t.id, getUrgencyLevel(t, now)])
+  );
 
   // Extract all unique tags from timers
   const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
 
   return c.render(
     <div
-      x-data="{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), typeSearch: '', tagSearch: '', showArchived: false }"
-      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v))"
+      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${JSON.stringify(urgencyMap)} }`}
+      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v))"
     >
       <div class="mb-6">
         <div class="flex items-center justify-between mb-4">
@@ -194,11 +204,33 @@ app.get('/', async (c) => {
             </div>
           )}
 
+          {/* Urgency filter */}
+          <div class="flex-1 min-w-[200px]">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">緊急度でフィルター</label>
+            <div class="flex flex-wrap gap-1.5">
+              {([
+                ['overdue', '期限超過', 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'],
+                ['today', '今日中', 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300'],
+                ['soon', '3日以内', 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'],
+                ['normal', '通常', 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'],
+              ] as const).map(([value, label, activeClass]) => (
+                <button
+                  type="button"
+                  x-on:click={`filterUrgency.includes('${value}') ? filterUrgency = filterUrgency.filter(x => x !== '${value}') : filterUrgency = [...filterUrgency, '${value}']`}
+                  x-bind:class={`filterUrgency.includes('${value}') ? '${activeClass} ring-2 ring-offset-1 ring-blue-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'`}
+                  class="rounded-full px-2.5 py-1 text-xs font-medium transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div class="flex items-end">
             <button
               type="button"
-              x-on:click="filterType = []; filterTags = []; typeSearch = ''; tagSearch = ''"
-              x-show="filterType.length > 0 || filterTags.length > 0"
+              x-on:click="filterType = []; filterTags = []; filterUrgency = []; typeSearch = ''; tagSearch = ''"
+              x-show="filterType.length > 0 || filterTags.length > 0 || filterUrgency.length > 0"
               class="rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             >
               クリア
@@ -209,11 +241,9 @@ app.get('/', async (c) => {
 
       {/* Card view */}
       <div x-show="viewMode === 'card'" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" id="timer-list">
-        {timers.length === 0 && <TimerCardEmpty />}
-        {timers.map((timer) => {
+        {sortedTimers.length === 0 && <TimerCardEmpty />}
+        {sortedTimers.map((timer) => {
           const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
-          const timerType = timer.type;
-          const timerTags = JSON.stringify(timer.tags || []).replace(/</g, '\\u003c');
           return (
             <div
               data-timer-card
@@ -221,6 +251,7 @@ app.get('/', async (c) => {
                 const timer = ${timerJson};
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
+                if (filterUrgency.length > 0 && !filterUrgency.includes(urgencyMap[timer.id])) return false;
                 return true;
               })()`}
               x-data="{ timer: ${timerJson} }"
@@ -233,8 +264,8 @@ app.get('/', async (c) => {
 
       {/* List view */}
       <div x-show="viewMode === 'list'" class="space-y-2" id="timer-list-compact">
-        {timers.length === 0 && <TimerCardEmpty />}
-        {timers.map((timer) => {
+        {sortedTimers.length === 0 && <TimerCardEmpty />}
+        {sortedTimers.map((timer) => {
           const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
           return (
             <div
@@ -243,6 +274,7 @@ app.get('/', async (c) => {
                 const timer = ${timerJson};
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
+                if (filterUrgency.length > 0 && !filterUrgency.includes(urgencyMap[timer.id])) return false;
                 return true;
               })()`}
             >
