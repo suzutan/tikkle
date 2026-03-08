@@ -25,4 +25,6 @@ export const timers = sqliteTable('timers', {
   scheduleTimes: text('schedule_times'), // JSON array
   // archive
   archivedAt: text('archived_at'),
+  // priority: 1=緊急, 2=高, 3=中, 4=なし
+  priority: integer('priority').notNull().default(4),
 });

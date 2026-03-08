@@ -2,6 +2,7 @@ interface TimerBase {
   id: string;
   name: string;
   tags?: string[]; // Optional array of tag strings
+  priority: number; // 1=緊急, 2=高, 3=中, 4=なし
   createdAt: string;
   updatedAt: string;
   archivedAt?: string; // ISO datetime when archived, undefined if active
@@ -91,9 +92,9 @@ export type TimerState =
   | PeriodicIncrementState;
 
 export type CreateTimerInput =
-  | { name: string; type: 'countdown'; targetDate: string; tags?: string[] }
-  | { name: string; type: 'elapsed'; startDate: string; tags?: string[] }
-  | { name: string; type: 'countdown-elapsed'; targetDate: string; tags?: string[] }
+  | { name: string; type: 'countdown'; targetDate: string; tags?: string[]; priority?: number }
+  | { name: string; type: 'elapsed'; startDate: string; tags?: string[]; priority?: number }
+  | { name: string; type: 'countdown-elapsed'; targetDate: string; tags?: string[]; priority?: number }
   | {
       name: string;
       type: 'stamina';
@@ -103,6 +104,7 @@ export type CreateTimerInput =
       recoveryIntervalSeconds?: number;
       lastUpdatedAt: string;
       tags?: string[];
+      priority?: number;
     }
   | {
       name: string;
@@ -113,12 +115,13 @@ export type CreateTimerInput =
       scheduleTimes: string[];
       lastUpdatedAt: string;
       tags?: string[];
+      priority?: number;
     };
 
 export type UpdateTimerInput =
-  | { type: 'countdown'; name?: string; targetDate?: string; tags?: string[] }
-  | { type: 'elapsed'; name?: string; startDate?: string; tags?: string[] }
-  | { type: 'countdown-elapsed'; name?: string; targetDate?: string; tags?: string[] }
+  | { type: 'countdown'; name?: string; targetDate?: string; tags?: string[]; priority?: number }
+  | { type: 'elapsed'; name?: string; startDate?: string; tags?: string[]; priority?: number }
+  | { type: 'countdown-elapsed'; name?: string; targetDate?: string; tags?: string[]; priority?: number }
   | {
       type: 'stamina';
       name?: string;
@@ -128,6 +131,7 @@ export type UpdateTimerInput =
       recoveryIntervalSeconds?: number;
       lastUpdatedAt?: string;
       tags?: string[];
+      priority?: number;
     }
   | {
       type: 'periodic-increment';
@@ -138,4 +142,5 @@ export type UpdateTimerInput =
       scheduleTimes?: string[];
       lastUpdatedAt?: string;
       tags?: string[];
+      priority?: number;
     };

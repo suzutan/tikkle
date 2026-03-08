@@ -10,6 +10,7 @@ function makeCountdown(targetDate: string): Timer {
     name: 'Test',
     type: 'countdown',
     targetDate,
+    priority: 4,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };
@@ -24,6 +25,7 @@ function makeStamina(currentValue: number, maxValue: number): Timer {
     maxValue,
     recoveryIntervalMinutes: 5,
     lastUpdatedAt: '2026-06-15T12:00:00.000Z',
+    priority: 4,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };
@@ -81,6 +83,7 @@ describe('getUrgencyLevel', () => {
       name: 'Test',
       type: 'countdown-elapsed',
       targetDate: '2026-06-14T00:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
@@ -99,6 +102,7 @@ describe('getUrgencyLevel', () => {
       name: 'Test',
       type: 'elapsed',
       startDate: '2026-01-01T00:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     };

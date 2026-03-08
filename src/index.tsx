@@ -2,8 +2,12 @@ import { Hono } from 'hono';
 import { renderer } from './renderer';
 import { D1TimerRepository } from './repository/timer';
 import { createTimerSchema } from './domain/timer/validation';
-import { getUrgencyLevel, compareByUrgency } from './domain/timer/urgency';
+import { getUrgencyLevel } from './domain/timer/urgency';
 import { applyQuickAction } from './domain/timer/quick-actions';
+import { compareTimers, isValidSortMode } from './domain/timer/sort';
+import type { SortMode } from './domain/timer/sort';
+import { isPriorityLevel, PRIORITY_LABELS } from './domain/timer/priority';
+import type { PriorityLevel } from './domain/timer/priority';
 import { datetimeLocalToISO } from './lib/timezone';
 import { TimerCard, TimerCardEmpty, TimerListItem } from './views/timer-card';
 import { TimerForm } from './views/timer-form';
@@ -29,8 +33,10 @@ app.get('/', async (c) => {
   const archivedTimers = await repo.getArchived();
   const now = new Date();
 
-  // Sort by urgency (overdue > today > soon > normal)
-  const sortedTimers = [...timers].sort((a, b) => compareByUrgency(a, b, now));
+  // Sort mode from query parameter
+  const sortParam = c.req.query('sort') ?? 'urgency';
+  const sortMode: SortMode = isValidSortMode(sortParam) ? sortParam : 'urgency';
+  const sortedTimers = [...timers].sort((a, b) => compareTimers(a, b, sortMode, now));
 
   // Compute urgency map for client-side filtering
   const urgencyMap = Object.fromEntries(
@@ -42,8 +48,8 @@ app.get('/', async (c) => {
 
   return c.render(
     <div
-      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${safeJsonForAlpine(urgencyMap)} }`}
-      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v)); $watch('searchQuery', v => syncFilterToUrl('q', v ? [v] : []))"
+      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), filterPriority: readFilterFromUrl('priority'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${safeJsonForAlpine(urgencyMap)} }`}
+      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v)); $watch('filterPriority', v => syncFilterToUrl('priority', v)); $watch('searchQuery', v => syncFilterToUrl('q', v ? [v] : []))"
     >
       <div class="mb-6">
         <div class="flex items-center justify-between mb-4">
@@ -113,9 +119,9 @@ app.get('/', async (c) => {
           </div>
         </div>
 
-        {/* Search */}
-        <div class="mb-3">
-          <div class="relative">
+        {/* Sort + Search */}
+        <div class="mb-3 flex gap-2">
+          <div class="relative flex-1">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
@@ -126,6 +132,19 @@ app.get('/', async (c) => {
               class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
           </div>
+          <select
+            x-on:change={`window.location.href = '/?sort=' + $event.target.value + (location.search.replace(/[?&]sort=[^&]*/g, '').replace(/^\\?/, '&').replace(/^&/, '?'))`}
+            class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          >
+            {([
+              ['urgency', '緊急度順'],
+              ['priority', '優先度順'],
+              ['created-desc', '新しい順'],
+              ['created-asc', '古い順'],
+            ] as const).map(([value, label]) => (
+              <option value={value} selected={sortMode === value}>{label}</option>
+            ))}
+          </select>
         </div>
 
         {/* Filters */}
@@ -282,11 +301,33 @@ app.get('/', async (c) => {
             </div>
           </div>
 
+          {/* Priority filter */}
+          <div class="flex-1 min-w-[200px]">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">優先度でフィルター</label>
+            <div class="flex flex-wrap gap-1.5">
+              {([
+                ['1', '緊急', 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'],
+                ['2', '高', 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300'],
+                ['3', '中', 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'],
+                ['4', 'なし', 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'],
+              ] as const).map(([value, label, activeClass]) => (
+                <button
+                  type="button"
+                  x-on:click={`filterPriority.includes('${value}') ? filterPriority = filterPriority.filter(x => x !== '${value}') : filterPriority = [...filterPriority, '${value}']`}
+                  x-bind:class={`filterPriority.includes('${value}') ? '${activeClass} ring-2 ring-offset-1 ring-blue-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'`}
+                  class="rounded-full px-2.5 py-1 text-xs font-medium transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div class="flex items-end">
             <button
               type="button"
-              x-on:click="filterType = []; filterTags = []; filterUrgency = []; searchQuery = ''; typeSearch = ''; tagSearch = ''"
-              x-show="filterType.length > 0 || filterTags.length > 0 || filterUrgency.length > 0 || searchQuery"
+              x-on:click="filterType = []; filterTags = []; filterUrgency = []; filterPriority = []; searchQuery = ''; typeSearch = ''; tagSearch = ''"
+              x-show="filterType.length > 0 || filterTags.length > 0 || filterUrgency.length > 0 || filterPriority.length > 0 || searchQuery"
               class="rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             >
               クリア
@@ -308,6 +349,7 @@ app.get('/', async (c) => {
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
                 if (filterUrgency.length > 0 && !filterUrgency.includes(urgencyMap[timer.id])) return false;
+                if (filterPriority.length > 0 && !filterPriority.includes(String(timer.priority ?? 4))) return false;
                 if (searchQuery) { const q = searchQuery.toLowerCase(); if (!timer.name.toLowerCase().includes(q) && !(timer.tags || []).some(t => t.toLowerCase().includes(q))) return false; }
                 return true;
               })()`}
@@ -332,6 +374,7 @@ app.get('/', async (c) => {
                 if (filterType.length > 0 && !filterType.includes(timer.type)) return false;
                 if (filterTags.length > 0 && (!timer.tags || !filterTags.some(tag => timer.tags.includes(tag)))) return false;
                 if (filterUrgency.length > 0 && !filterUrgency.includes(urgencyMap[timer.id])) return false;
+                if (filterPriority.length > 0 && !filterPriority.includes(String(timer.priority ?? 4))) return false;
                 if (searchQuery) { const q = searchQuery.toLowerCase(); if (!timer.name.toLowerCase().includes(q) && !(timer.tags || []).some(t => t.toLowerCase().includes(q))) return false; }
                 return true;
               })()`}
@@ -416,14 +459,15 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
   const tags = body.tags
     ? body.tags.split(',').map(t => t.trim()).filter(t => t.length > 0)
     : undefined;
+  const priority = body.priority ? Number(body.priority) : undefined;
 
   switch (type) {
     case 'countdown':
-      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags, priority };
     case 'elapsed':
-      return { name, type, startDate: datetimeLocalToISO(body.startDate), tags };
+      return { name, type, startDate: datetimeLocalToISO(body.startDate), tags, priority };
     case 'countdown-elapsed':
-      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags, priority };
     case 'stamina': {
       // Calculate total seconds from minutes and seconds inputs
       const minutes = Number(body.recoveryIntervalMinutes) || 0;
@@ -438,6 +482,7 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
         recoveryIntervalSeconds: totalSeconds,
         lastUpdatedAt: new Date().toISOString(),
         tags,
+        priority,
       };
     }
     case 'periodic-increment':
@@ -450,6 +495,7 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
         scheduleTimes: body.scheduleTimes.split(',').map((s) => s.trim()),
         lastUpdatedAt: new Date().toISOString(),
         tags,
+        priority,
       };
     default:
       throw new Error(`Unknown type: ${type}`);
@@ -555,6 +601,19 @@ app.post('/api/timers/:id/quick-action', async (c) => {
     return c.body(null, 400);
   }
 
+  return c.body(null, 200);
+});
+
+app.post('/api/timers/:id/priority', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const timer = await repo.getById(c.req.param('id'));
+  if (!timer) return c.body(null, 404);
+
+  const body = await c.req.parseBody() as Record<string, string>;
+  const priority = Number(body.priority);
+  if (!isPriorityLevel(priority)) return c.body(null, 400);
+
+  await repo.updatePriority(timer.id, priority);
   return c.body(null, 200);
 });
 

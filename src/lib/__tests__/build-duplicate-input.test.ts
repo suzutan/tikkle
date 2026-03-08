@@ -10,6 +10,7 @@ describe('buildDuplicateInput', () => {
       name: 'My Countdown',
       type: 'countdown',
       targetDate: '2025-12-31T23:59:59.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -30,6 +31,7 @@ describe('buildDuplicateInput', () => {
       type: 'elapsed',
       startDate: '2025-06-01T10:00:00.000Z',
       tags: ['work', 'important'],
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -49,6 +51,7 @@ describe('buildDuplicateInput', () => {
       name: 'No Tags',
       type: 'countdown-elapsed',
       targetDate: '2025-12-31T23:59:59.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -71,6 +74,7 @@ describe('buildDuplicateInput', () => {
       recoveryIntervalMinutes: 5,
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
       tags: ['game'],
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -101,6 +105,7 @@ describe('buildDuplicateInput', () => {
       incrementAmount: 10,
       scheduleTimes: ['09:00', '18:00'],
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -129,6 +134,7 @@ describe('buildDuplicateInput', () => {
       type: 'countdown',
       targetDate: '2025-12-31T23:59:59.000Z',
       tags: originalTags,
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };

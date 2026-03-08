@@ -2,6 +2,8 @@ import type { Timer } from '../domain/timer/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
 import { isoToDatetimeLocal } from '../lib/timezone';
 import { escapeForAlpineAttr, safeJsonForAlpine } from '../lib/escape';
+import { PRIORITY_LABELS } from '../domain/timer/priority';
+import type { PriorityLevel } from '../domain/timer/priority';
 
 const TIMER_TYPES = Object.keys(TIMER_TYPE_LABELS) as Array<keyof typeof TIMER_TYPE_LABELS>;
 
@@ -88,6 +90,25 @@ export function TimerForm({ timer, errors, allTags }: { timer?: Timer; errors?: 
             </div>
           </div>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">カンマ区切りで複数のタグを入力できます</p>
+        </div>
+
+        {/* priority */}
+        <div class="mb-4">
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">優先度</label>
+          <div class="flex gap-2">
+            {([1, 2, 3, 4] as PriorityLevel[]).map((level) => (
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="priority"
+                  value={String(level)}
+                  checked={level === (timer?.priority ?? 4)}
+                  class="text-blue-600 focus:ring-blue-500"
+                />
+                <span class="text-sm text-gray-700 dark:text-gray-300">{PRIORITY_LABELS[level]}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* countdown / countdown-elapsed */}

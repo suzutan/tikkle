@@ -1,6 +1,9 @@
 import type { Timer } from '../domain/timer/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
 import { safeJsonForAlpine } from '../lib/escape';
+import { PRIORITY_LABELS } from '../domain/timer/priority';
+import type { PriorityLevel } from '../domain/timer/priority';
+import { PRIORITY_COLORS } from './priority-styles';
 
 export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolean }) {
   const timerJson = safeJsonForAlpine(timer);
@@ -9,7 +12,14 @@ export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolea
     <div class={`group flex h-full flex-col rounded-2xl border p-6 shadow-lg transition-all hover:shadow-xl ${archived ? 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 dark:border-gray-600 dark:from-gray-850 dark:to-gray-900' : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900'}`} x-data="{ showDeleteModal: false }">
       <div class="mb-4 flex items-start justify-between">
         <div class="flex-1">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{timer.name}</h3>
+          <div class="flex items-center gap-2">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{timer.name}</h3>
+            {timer.priority < 4 && (
+              <span class={`rounded-full px-2 py-0.5 text-xs font-bold ${PRIORITY_COLORS[timer.priority as PriorityLevel].badge}`}>
+                {PRIORITY_LABELS[timer.priority as PriorityLevel]}
+              </span>
+            )}
+          </div>
           <p class="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">{TIMER_TYPE_LABELS[timer.type]}</p>
           {timer.tags && timer.tags.length > 0 && (
             <div class="mt-2 flex flex-wrap gap-1.5">
@@ -213,6 +223,11 @@ export function TimerListItem({ timer, archived }: { timer: Timer; archived?: bo
       <div class="flex-1 min-w-0" x-data={`timerDisplay('${timerJson}')`}>
         <div class="flex items-baseline gap-2 flex-wrap">
           <h3 class="truncate font-semibold text-gray-900 dark:text-gray-100">{timer.name}</h3>
+          {timer.priority < 4 && (
+            <span class={`rounded-full px-1.5 py-0.5 text-xs font-bold ${PRIORITY_COLORS[timer.priority as PriorityLevel].badge}`}>
+              {PRIORITY_LABELS[timer.priority as PriorityLevel]}
+            </span>
+          )}
           <span class="text-xs text-gray-500 dark:text-gray-400">{TIMER_TYPE_LABELS[timer.type]}</span>
           {timer.tags && timer.tags.length > 0 && timer.tags.map((tag) => (
             <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">

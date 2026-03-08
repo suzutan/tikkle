@@ -10,6 +10,7 @@ describe('buildInitialState', () => {
       name: 'My Countdown',
       type: 'countdown',
       targetDate: '2025-12-31T23:59:59.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -32,6 +33,7 @@ describe('buildInitialState', () => {
       name: 'My Elapsed',
       type: 'elapsed',
       startDate: '2025-06-01T10:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -54,6 +56,7 @@ describe('buildInitialState', () => {
       name: 'My Deadline',
       type: 'countdown-elapsed',
       targetDate: '2025-12-31T23:59:59.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -79,6 +82,7 @@ describe('buildInitialState', () => {
       maxValue: 200,
       recoveryIntervalMinutes: 5,
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -108,6 +112,7 @@ describe('buildInitialState', () => {
       incrementAmount: 10,
       scheduleTimes: ['09:00', '18:00'],
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };

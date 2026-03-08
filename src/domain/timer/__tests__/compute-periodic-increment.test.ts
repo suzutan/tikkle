@@ -13,6 +13,7 @@ function createPeriodicTimer(overrides: {
     id: 'timer-1',
     name: 'Test Periodic',
     type: 'periodic-increment',
+    priority: 4,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     ...overrides,

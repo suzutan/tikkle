@@ -11,6 +11,7 @@ export function toTimer(row: TimerRow): Timer {
     id: row.id,
     name: row.name,
     tags: row.tags ? JSON.parse(row.tags) : undefined,
+    priority: row.priority ?? 4,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt ?? undefined,
@@ -54,6 +55,7 @@ export function toInsertValues(input: CreateTimerInput, id: string, now: string)
     name: input.name,
     type: input.type,
     tags: input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : null,
+    priority: input.priority ?? 4,
     createdAt: now,
     updatedAt: now
   };
@@ -135,6 +137,7 @@ export class D1TimerRepository {
     if (input.tags !== undefined) {
       updateValues.tags = input.tags.length > 0 ? JSON.stringify(input.tags) : null;
     }
+    if (input.priority !== undefined) updateValues.priority = input.priority;
 
     switch (input.type) {
       case 'countdown':
@@ -177,6 +180,11 @@ export class D1TimerRepository {
     const now = new Date().toISOString();
     await this.db.update(timers).set({ archivedAt: now }).where(eq(timers.id, id));
     return (await this.getById(id))!;
+  }
+
+  async updatePriority(id: string, priority: number): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ priority, updatedAt: now }).where(eq(timers.id, id));
   }
 
   async unarchive(id: string): Promise<Timer> {
