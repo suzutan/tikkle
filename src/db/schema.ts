@@ -29,8 +29,11 @@ export const timers = sqliteTable('timers', {
   priority: integer('priority').notNull().default(4),
   // project
   projectId: text('project_id'),
+  // manual sort order (fractional indexing)
+  rank: real('rank'),
 }, (table) => [
   index('idx_timers_project_id').on(table.projectId),
+  index('idx_timers_project_rank').on(table.projectId, table.rank),
 ]);
 
 export const projects = sqliteTable('projects', {

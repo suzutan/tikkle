@@ -1,4 +1,4 @@
-import { eq, desc, isNull, isNotNull, and } from 'drizzle-orm';
+import { eq, desc, isNull, isNotNull, and, sql } from 'drizzle-orm';
 import { drizzle, DrizzleD1Database } from 'drizzle-orm/d1';
 import { timers } from '../db/schema';
 import type { Timer, CreateTimerInput, UpdateTimerInput } from '../domain/timer/types';
@@ -13,6 +13,7 @@ export function toTimer(row: TimerRow): Timer {
     tags: row.tags ? JSON.parse(row.tags) : undefined,
     priority: row.priority ?? 4,
     projectId: row.projectId ?? undefined,
+    rank: row.rank ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt ?? undefined,
@@ -199,6 +200,22 @@ export class D1TimerRepository {
   async updatePriority(id: string, priority: number): Promise<void> {
     const now = new Date().toISOString();
     await this.db.update(timers).set({ priority, updatedAt: now }).where(eq(timers.id, id));
+  }
+
+  async updateRank(id: string, rank: number): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ rank, updatedAt: now }).where(eq(timers.id, id));
+  }
+
+  async getMaxRank(projectId?: string | null): Promise<number | null> {
+    const conditions = projectId
+      ? and(eq(timers.projectId, projectId), isNull(timers.archivedAt))
+      : isNull(timers.archivedAt);
+    const result = await this.db
+      .select({ maxRank: sql<number | null>`MAX(${timers.rank})` })
+      .from(timers)
+      .where(conditions);
+    return result[0]?.maxRank ?? null;
   }
 
   async unarchive(id: string): Promise<Timer> {

@@ -1,9 +1,9 @@
 import type { Timer } from './types';
 import { getUrgencyLevel } from './urgency';
 
-export type SortMode = 'priority' | 'urgency' | 'created-asc' | 'created-desc';
+export type SortMode = 'priority' | 'urgency' | 'created-asc' | 'created-desc' | 'manual';
 
-const SORT_MODE_WHITELIST: readonly string[] = ['priority', 'urgency', 'created-asc', 'created-desc'];
+const SORT_MODE_WHITELIST: readonly string[] = ['priority', 'urgency', 'created-asc', 'created-desc', 'manual'];
 
 export function isValidSortMode(value: string): value is SortMode {
   return SORT_MODE_WHITELIST.includes(value);
@@ -35,6 +35,13 @@ export function compareTimers(a: Timer, b: Timer, mode: SortMode, now: Date): nu
     case 'created-desc':
       primary = b.createdAt.localeCompare(a.createdAt);
       break;
+    case 'manual': {
+      const ra = a.rank ?? Infinity;
+      const rb = b.rank ?? Infinity;
+      // 両方 Infinity の場合は 0（タイブレークに委ねる）
+      primary = ra === rb ? 0 : ra - rb;
+      break;
+    }
   }
 
   if (primary !== 0) return primary;

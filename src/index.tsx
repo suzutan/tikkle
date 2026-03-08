@@ -148,6 +148,7 @@ app.get('/', async (c) => {
               ['priority', '優先度順'],
               ['created-desc', '新しい順'],
               ['created-asc', '古い順'],
+              ['manual', '手動'],
             ] as const).map(([value, label]) => (
               <option value={value} selected={sortMode === value}>{label}</option>
             ))}
@@ -369,7 +370,7 @@ app.get('/', async (c) => {
       </div>
 
       {/* List view */}
-      <div x-show="viewMode === 'list'" class="space-y-2" id="timer-list-compact">
+      <div x-show="viewMode === 'list'" class="space-y-2" id="timer-list" x-data="timerSortable()" x-init="init()">
         {sortedTimers.length === 0 && <TimerCardEmpty />}
         {sortedTimers.map((timer) => {
           const timerJson = safeJsonForAlpine(timer);
@@ -386,7 +387,7 @@ app.get('/', async (c) => {
                 return true;
               })()`}
             >
-              <TimerListItem timer={timer} />
+              <TimerListItem timer={timer} manualSort={sortMode === 'manual'} />
             </div>
           );
         })}
@@ -748,6 +749,19 @@ app.post('/api/projects/:id', async (c) => {
   }
 
   return c.notFound();
+});
+
+app.post('/api/timers/:id/rank', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const timer = await repo.getById(c.req.param('id'));
+  if (!timer) return c.body(null, 404);
+
+  const body = await c.req.json<{ rank: string }>();
+  const rank = Number(body.rank);
+  if (!Number.isFinite(rank)) return c.body(null, 400);
+
+  await repo.updateRank(timer.id, rank);
+  return c.body(null, 200);
 });
 
 app.post('/api/timers/:id/project', async (c) => {

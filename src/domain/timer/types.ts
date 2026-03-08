@@ -4,6 +4,7 @@ interface TimerBase {
   tags?: string[]; // Optional array of tag strings
   priority: number; // 1=緊急, 2=高, 3=中, 4=なし
   projectId?: string;
+  rank?: number;
   createdAt: string;
   updatedAt: string;
   archivedAt?: string; // ISO datetime when archived, undefined if active

@@ -213,12 +213,20 @@ export function TimerCardEmpty() {
   );
 }
 
-export function TimerListItem({ timer, archived }: { timer: Timer; archived?: boolean }) {
+export function TimerListItem({ timer, archived, manualSort }: { timer: Timer; archived?: boolean; manualSort?: boolean }) {
   const timerJson = safeJsonForAlpine(timer);
 
   return (
-    <div class={`group rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:bg-gray-800 ${archived ? 'border-gray-300 opacity-75 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'}`} x-data="{ showDeleteModal: false }">
+    <div class={`group rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:bg-gray-800 ${archived ? 'border-gray-300 opacity-75 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'}`} x-data="{ showDeleteModal: false }" data-timer-id={timer.id} data-rank={timer.rank != null ? String(timer.rank) : ''}>
       <div class="flex items-center gap-4">
+      {/* Drag handle (manual sort mode only) */}
+      {manualSort && !archived && (
+        <div class="drag-handle cursor-grab text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" title="ドラッグして並び替え">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </div>
+      )}
       {/* Timer info */}
       <div class="flex-1 min-w-0" x-data={`timerDisplay('${timerJson}')`}>
         <div class="flex items-baseline gap-2 flex-wrap">
