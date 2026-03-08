@@ -1,8 +1,9 @@
 import type { Timer } from '../domain/timer/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
+import { safeJsonForAlpine } from '../lib/escape';
 
 export function TimerCard({ timer, archived }: { timer: Timer; archived?: boolean }) {
-  const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
+  const timerJson = safeJsonForAlpine(timer);
 
   return (
     <div class={`group flex h-full flex-col rounded-2xl border p-6 shadow-lg transition-all hover:shadow-xl ${archived ? 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 dark:border-gray-600 dark:from-gray-850 dark:to-gray-900' : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900'}`} x-data="{ showDeleteModal: false }">
@@ -203,7 +204,7 @@ export function TimerCardEmpty() {
 }
 
 export function TimerListItem({ timer, archived }: { timer: Timer; archived?: boolean }) {
-  const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c');
+  const timerJson = safeJsonForAlpine(timer);
 
   return (
     <div class={`group rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md dark:bg-gray-800 ${archived ? 'border-gray-300 opacity-75 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'}`} x-data="{ showDeleteModal: false }">

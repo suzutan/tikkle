@@ -10,6 +10,7 @@ import { TimerForm } from './views/timer-form';
 import { TIMER_TYPE_LABELS } from './lib/timer-type-labels';
 import { TIMER_TEMPLATES } from './lib/timer-templates';
 import { buildFromTemplate, buildDuplicateInput } from './lib/timer-form-helpers';
+import { escapeForAlpineAttr, safeJsonForAlpine } from './lib/escape';
 import type { CreateTimerInput } from './domain/timer/types';
 
 type Bindings = {
@@ -41,7 +42,7 @@ app.get('/', async (c) => {
 
   return c.render(
     <div
-      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${JSON.stringify(urgencyMap)} }`}
+      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${safeJsonForAlpine(urgencyMap)} }`}
       x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v)); $watch('searchQuery', v => syncFilterToUrl('q', v ? [v] : []))"
     >
       <div class="mb-6">
@@ -200,22 +201,25 @@ app.get('/', async (c) => {
                   class="flex min-h-[38px] w-full cursor-text flex-wrap items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1.5 transition-colors dark:border-gray-600 dark:bg-gray-700"
                   x-bind:class="tagOpen ? 'border-blue-500 ring-1 ring-blue-500 dark:border-blue-400 dark:ring-blue-400' : ''"
                 >
-                  {allTags.map((tag) => (
+                  {allTags.map((tag) => {
+                    const safeTag = escapeForAlpineAttr(tag);
+                    return (
                     <span
-                      x-show={`filterTags.includes('${tag}')`}
+                      x-show={`filterTags.includes('${safeTag}')`}
                       x-cloak
                       class="inline-flex items-center gap-0.5 rounded bg-green-100 py-0.5 pl-2 pr-1 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300"
                     >
                       {tag}
                       <button
                         type="button"
-                        x-on:click={`$event.stopPropagation(); filterTags = filterTags.filter(x => x !== '${tag}')`}
+                        x-on:click={`$event.stopPropagation(); filterTags = filterTags.filter(x => x !== '${safeTag}')`}
                         class="ml-0.5 rounded p-0.5 hover:bg-green-200 dark:hover:bg-green-800"
                       >
                         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                     </span>
-                  ))}
+                    );
+                  })}
                   <input
                     x-ref="tagInput"
                     type="text"
@@ -228,23 +232,26 @@ app.get('/', async (c) => {
                 </div>
                 <div x-show="tagOpen" x-cloak class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
                   <div class="max-h-52 overflow-y-auto p-1">
-                    {allTags.map((tag) => (
+                    {allTags.map((tag) => {
+                      const safeTag = escapeForAlpineAttr(tag);
+                      return (
                       <div
-                        x-show={`'${tag}'.toLowerCase().includes(tagSearch.toLowerCase()) || tagSearch === ''`}
-                        x-on:click={`filterTags.includes('${tag}') ? filterTags = filterTags.filter(x => x !== '${tag}') : filterTags = [...filterTags, '${tag}']; tagSearch = ''`}
+                        x-show={`'${safeTag}'.toLowerCase().includes(tagSearch.toLowerCase()) || tagSearch === ''`}
+                        x-on:click={`filterTags.includes('${safeTag}') ? filterTags = filterTags.filter(x => x !== '${safeTag}') : filterTags = [...filterTags, '${safeTag}']; tagSearch = ''`}
                         class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-600"
                       >
                         <svg
-                          x-show={`filterTags.includes('${tag}')`}
+                          x-show={`filterTags.includes('${safeTag}')`}
                           class="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400"
                           fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
                         ><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                        <div x-show={`!filterTags.includes('${tag}')`} class="h-4 w-4 flex-shrink-0"></div>
+                        <div x-show={`!filterTags.includes('${safeTag}')`} class="h-4 w-4 flex-shrink-0"></div>
                         {tag}
                       </div>
-                    ))}
+                      );
+                    })}
                     <div
-                      x-show={`${JSON.stringify(allTags)}.every(t => !t.toLowerCase().includes(tagSearch.toLowerCase()) && tagSearch !== '')`}
+                      x-show={`${safeJsonForAlpine(allTags)}.every(t => !t.toLowerCase().includes(tagSearch.toLowerCase()) && tagSearch !== '')`}
                       class="px-2 py-3 text-center text-xs text-gray-400 dark:text-gray-500"
                     >一致するタグがありません</div>
                   </div>
@@ -292,7 +299,7 @@ app.get('/', async (c) => {
       <div x-show="viewMode === 'card'" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" id="timer-list">
         {sortedTimers.length === 0 && <TimerCardEmpty />}
         {sortedTimers.map((timer) => {
-          const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
+          const timerJson = safeJsonForAlpine(timer);
           return (
             <div
               data-timer-card
@@ -304,7 +311,7 @@ app.get('/', async (c) => {
                 if (searchQuery) { const q = searchQuery.toLowerCase(); if (!timer.name.toLowerCase().includes(q) && !(timer.tags || []).some(t => t.toLowerCase().includes(q))) return false; }
                 return true;
               })()`}
-              x-data="{ timer: ${timerJson} }"
+              x-data={`{ timer: ${timerJson} }`}
             >
               <TimerCard timer={timer} />
             </div>
@@ -316,7 +323,7 @@ app.get('/', async (c) => {
       <div x-show="viewMode === 'list'" class="space-y-2" id="timer-list-compact">
         {sortedTimers.length === 0 && <TimerCardEmpty />}
         {sortedTimers.map((timer) => {
-          const timerJson = JSON.stringify(timer).replace(/</g, '\\u003c').replace(/'/g, "\\'");
+          const timerJson = safeJsonForAlpine(timer);
           return (
             <div
               data-timer-card

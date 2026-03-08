@@ -1,6 +1,7 @@
 import type { Timer } from '../domain/timer/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
 import { isoToDatetimeLocal } from '../lib/timezone';
+import { escapeForAlpineAttr, safeJsonForAlpine } from '../lib/escape';
 
 const TIMER_TYPES = Object.keys(TIMER_TYPE_LABELS) as Array<keyof typeof TIMER_TYPE_LABELS>;
 
@@ -60,7 +61,7 @@ export function TimerForm({ timer, errors, allTags }: { timer?: Timer; errors?: 
           />
         </div>
 
-        <div class="mb-4" x-data={`{ tagInput: '${timer?.tags ? timer.tags.join(', ') : ''}', showSuggestions: false, allTags: ${JSON.stringify(allTags || [])}, get suggestions() { const parts = this.tagInput.split(','); const current = (parts[parts.length - 1] || '').trim().toLowerCase(); if (!current) return []; const existing = parts.slice(0, -1).map(t => t.trim().toLowerCase()); return this.allTags.filter(t => t.toLowerCase().includes(current) && !existing.includes(t.toLowerCase())); } }`} {...{ 'x-on:click.outside': 'showSuggestions = false' }}>
+        <div class="mb-4" x-data={`{ tagInput: '${escapeForAlpineAttr(timer?.tags ? timer.tags.join(', ') : '')}', showSuggestions: false, allTags: ${safeJsonForAlpine(allTags || [])}, get suggestions() { const parts = this.tagInput.split(','); const current = (parts[parts.length - 1] || '').trim().toLowerCase(); if (!current) return []; const existing = parts.slice(0, -1).map(t => t.trim().toLowerCase()); return this.allTags.filter(t => t.toLowerCase().includes(current) && !existing.includes(t.toLowerCase())); } }`} {...{ 'x-on:click.outside': 'showSuggestions = false' }}>
           <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">タグ（オプション）</label>
           <div class="relative">
             <input
