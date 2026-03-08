@@ -23,6 +23,7 @@ describe('toTimer', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
 
     // When: toTimer を呼ぶ
@@ -61,6 +62,7 @@ describe('toTimer', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
 
     // When: toTimer を呼ぶ
@@ -99,6 +101,7 @@ describe('toTimer', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
 
     // When: toTimer を呼ぶ
@@ -137,6 +140,7 @@ describe('toTimer', () => {
       scheduleTimes: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
 
     // When: toTimer を呼ぶ
@@ -178,6 +182,7 @@ describe('toTimer', () => {
       recoveryIntervalSeconds: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
 
     // When: toTimer を呼ぶ
@@ -220,6 +225,7 @@ describe('toTimer', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
 
     // When/Then: toTimer を呼ぶとエラーが投げられる
@@ -246,6 +252,7 @@ describe('toTimer', () => {
       lastUpdatedAt: null,
       archivedAt: '2026-06-01T00:00:00.000Z',
       priority: 4,
+      projectId: null,
     };
 
     // When: toTimer を呼ぶ
@@ -279,6 +286,7 @@ describe('toInsertValues', () => {
       targetDate: '2026-12-31T00:00:00.000Z',
       tags: '["work","important"]',
       priority: 4,
+      projectId: null,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
@@ -305,6 +313,7 @@ describe('toInsertValues', () => {
       startDate: '2026-01-01T00:00:00.000Z',
       tags: null,
       priority: 4,
+      projectId: null,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
@@ -338,6 +347,7 @@ describe('toInsertValues', () => {
       lastUpdatedAt: '2026-01-01T00:00:00.000Z',
       tags: null,
       priority: 4,
+      projectId: null,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
@@ -373,6 +383,7 @@ describe('toInsertValues', () => {
       lastUpdatedAt: '2026-01-01T00:00:00.000Z',
       tags: '["game"]',
       priority: 4,
+      projectId: null,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
@@ -399,6 +410,7 @@ describe('toInsertValues', () => {
       targetDate: '2026-12-31T00:00:00.000Z',
       tags: null,
       priority: 4,
+      projectId: null,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
@@ -485,6 +497,7 @@ describe('D1TimerRepository', () => {
         scheduleTimes: null,
         lastUpdatedAt: null,
         priority: 4,
+        projectId: null,
       },
       {
         id: 'timer-2',
@@ -503,6 +516,7 @@ describe('D1TimerRepository', () => {
         scheduleTimes: null,
         lastUpdatedAt: null,
         priority: 4,
+        projectId: null,
       },
     ];
     mockDbInstance.orderBy.mockResolvedValue(mockRows);
@@ -536,6 +550,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     mockDbInstance.limit.mockResolvedValue([mockRow]);
 
@@ -585,6 +600,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     mockDbInstance.values.mockResolvedValue(undefined);
     mockDbInstance.limit.mockResolvedValue([mockCreatedRow]);
@@ -637,6 +653,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     const updatedRow = { ...existingRow, name: 'Updated Timer', targetDate: '2027-06-30T00:00:00.000Z' };
     mockDbInstance.limit
@@ -687,6 +704,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     mockDbInstance.limit.mockResolvedValueOnce([existingRow]);
 
@@ -716,6 +734,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     const updatedRow = { ...existingRow, startDate: '2026-02-01T00:00:00.000Z' };
     mockDbInstance.limit
@@ -753,6 +772,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     const updatedRow = { ...existingRow, targetDate: '2027-06-30T00:00:00.000Z' };
     mockDbInstance.limit
@@ -789,6 +809,7 @@ describe('D1TimerRepository', () => {
       incrementAmount: null,
       scheduleTimes: null,
       priority: 4,
+      projectId: null,
     };
     const updatedRow = { ...existingRow, currentValue: 80 };
     mockDbInstance.limit
@@ -828,6 +849,7 @@ describe('D1TimerRepository', () => {
       recoveryIntervalMinutes: null,
       recoveryIntervalSeconds: null,
       priority: 4,
+      projectId: null,
     };
     const updatedRow = { ...existingRow, currentValue: 40 };
     mockDbInstance.limit
@@ -869,6 +891,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: null,
       priority: 4,
+      projectId: null,
     };
     const archivedRow = { ...existingRow, archivedAt: '2026-06-01T00:00:00.000Z' };
     mockDbInstance.limit
@@ -913,6 +936,7 @@ describe('D1TimerRepository', () => {
       lastUpdatedAt: null,
       archivedAt: '2026-06-01T00:00:00.000Z',
       priority: 4,
+      projectId: null,
     };
     const unarchivedRow = { ...archivedRow, archivedAt: null };
     mockDbInstance.limit
@@ -957,6 +981,7 @@ describe('D1TimerRepository', () => {
         lastUpdatedAt: null,
         archivedAt: null,
         priority: 4,
+        projectId: null,
       },
     ];
     mockDbInstance.orderBy.mockResolvedValueOnce(mockRows);
@@ -991,6 +1016,7 @@ describe('D1TimerRepository', () => {
         lastUpdatedAt: null,
         archivedAt: null,
         priority: 4,
+        projectId: null,
       },
       {
         id: 'timer-2',
@@ -1010,6 +1036,7 @@ describe('D1TimerRepository', () => {
         lastUpdatedAt: null,
         archivedAt: '2026-06-01T00:00:00.000Z',
         priority: 4,
+        projectId: null,
       },
     ];
     mockDbInstance.orderBy.mockResolvedValueOnce(mockRows);

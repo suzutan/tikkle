@@ -1,4 +1,5 @@
 import type { Timer } from '../domain/timer/types';
+import type { Project } from '../domain/project/types';
 import { TIMER_TYPE_LABELS } from '../lib/timer-type-labels';
 import { isoToDatetimeLocal } from '../lib/timezone';
 import { escapeForAlpineAttr, safeJsonForAlpine } from '../lib/escape';
@@ -7,7 +8,7 @@ import type { PriorityLevel } from '../domain/timer/priority';
 
 const TIMER_TYPES = Object.keys(TIMER_TYPE_LABELS) as Array<keyof typeof TIMER_TYPE_LABELS>;
 
-export function TimerForm({ timer, errors, allTags }: { timer?: Timer; errors?: string[]; allTags?: string[] }) {
+export function TimerForm({ timer, errors, allTags, allProjects }: { timer?: Timer; errors?: string[]; allTags?: string[]; allProjects?: Project[] }) {
   const isEdit = !!timer;
   const action = isEdit ? `/api/timers/${timer!.id}` : '/api/timers';
   const method = isEdit ? 'put' : 'post';
@@ -110,6 +111,22 @@ export function TimerForm({ timer, errors, allTags }: { timer?: Timer; errors?: 
             ))}
           </div>
         </div>
+
+        {/* project */}
+        {allProjects && allProjects.length > 0 && (
+          <div class="mb-4">
+            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">プロジェクト</label>
+            <select
+              name="projectId"
+              class="w-full rounded border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            >
+              <option value="">なし</option>
+              {allProjects.map((project) => (
+                <option value={project.id} selected={timer?.projectId === project.id}>{project.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* countdown / countdown-elapsed */}
         <div x-show="type === 'countdown' || type === 'countdown-elapsed'" class="mb-4">

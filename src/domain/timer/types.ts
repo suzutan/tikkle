@@ -3,6 +3,7 @@ interface TimerBase {
   name: string;
   tags?: string[]; // Optional array of tag strings
   priority: number; // 1=緊急, 2=高, 3=中, 4=なし
+  projectId?: string;
   createdAt: string;
   updatedAt: string;
   archivedAt?: string; // ISO datetime when archived, undefined if active
@@ -92,9 +93,9 @@ export type TimerState =
   | PeriodicIncrementState;
 
 export type CreateTimerInput =
-  | { name: string; type: 'countdown'; targetDate: string; tags?: string[]; priority?: number }
-  | { name: string; type: 'elapsed'; startDate: string; tags?: string[]; priority?: number }
-  | { name: string; type: 'countdown-elapsed'; targetDate: string; tags?: string[]; priority?: number }
+  | { name: string; type: 'countdown'; targetDate: string; tags?: string[]; priority?: number; projectId?: string }
+  | { name: string; type: 'elapsed'; startDate: string; tags?: string[]; priority?: number; projectId?: string }
+  | { name: string; type: 'countdown-elapsed'; targetDate: string; tags?: string[]; priority?: number; projectId?: string }
   | {
       name: string;
       type: 'stamina';
@@ -105,6 +106,7 @@ export type CreateTimerInput =
       lastUpdatedAt: string;
       tags?: string[];
       priority?: number;
+      projectId?: string;
     }
   | {
       name: string;
@@ -116,12 +118,13 @@ export type CreateTimerInput =
       lastUpdatedAt: string;
       tags?: string[];
       priority?: number;
+      projectId?: string;
     };
 
 export type UpdateTimerInput =
-  | { type: 'countdown'; name?: string; targetDate?: string; tags?: string[]; priority?: number }
-  | { type: 'elapsed'; name?: string; startDate?: string; tags?: string[]; priority?: number }
-  | { type: 'countdown-elapsed'; name?: string; targetDate?: string; tags?: string[]; priority?: number }
+  | { type: 'countdown'; name?: string; targetDate?: string; tags?: string[]; priority?: number; projectId?: string }
+  | { type: 'elapsed'; name?: string; startDate?: string; tags?: string[]; priority?: number; projectId?: string }
+  | { type: 'countdown-elapsed'; name?: string; targetDate?: string; tags?: string[]; priority?: number; projectId?: string }
   | {
       type: 'stamina';
       name?: string;
@@ -132,6 +135,7 @@ export type UpdateTimerInput =
       lastUpdatedAt?: string;
       tags?: string[];
       priority?: number;
+      projectId?: string;
     }
   | {
       type: 'periodic-increment';
@@ -143,4 +147,5 @@ export type UpdateTimerInput =
       lastUpdatedAt?: string;
       tags?: string[];
       priority?: number;
+      projectId?: string;
     };

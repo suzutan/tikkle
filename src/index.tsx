@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import { renderer } from './renderer';
 import { D1TimerRepository } from './repository/timer';
+import { D1ProjectRepository } from './repository/project';
+import { createProjectSchema } from './domain/project/validation';
+import { Sidebar } from './views/sidebar';
 import { createTimerSchema } from './domain/timer/validation';
 import { getUrgencyLevel } from './domain/timer/urgency';
 import { applyQuickAction } from './domain/timer/quick-actions';
@@ -29,8 +32,10 @@ app.use(renderer);
 
 app.get('/', async (c) => {
   const repo = new D1TimerRepository(c.env.DB);
+  const projectRepo = new D1ProjectRepository(c.env.DB);
   const timers = await repo.getAll();
   const archivedTimers = await repo.getArchived();
+  const allProjects = await projectRepo.getAll();
   const now = new Date();
 
   // Sort mode from query parameter
@@ -47,10 +52,12 @@ app.get('/', async (c) => {
   const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
 
   return c.render(
-    <div
-      x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), filterPriority: readFilterFromUrl('priority'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${safeJsonForAlpine(urgencyMap)} }`}
-      x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v)); $watch('filterPriority', v => syncFilterToUrl('priority', v)); $watch('searchQuery', v => syncFilterToUrl('q', v ? [v] : []))"
-    >
+    <div class="flex flex-col md:flex-row gap-6">
+      <Sidebar projects={allProjects} />
+      <div class="flex-1 min-w-0"
+        x-data={`{ viewMode: localStorage.getItem('viewMode') || 'card', filterType: readFilterFromUrl('type'), filterTags: readFilterFromUrl('tags'), filterUrgency: readFilterFromUrl('urgency'), filterPriority: readFilterFromUrl('priority'), searchQuery: new URLSearchParams(location.search).get('q') || '', typeSearch: '', tagSearch: '', showArchived: false, urgencyMap: ${safeJsonForAlpine(urgencyMap)} }`}
+        x-init="$watch('filterType', v => syncFilterToUrl('type', v)); $watch('filterTags', v => syncFilterToUrl('tags', v)); $watch('filterUrgency', v => syncFilterToUrl('urgency', v)); $watch('filterPriority', v => syncFilterToUrl('priority', v)); $watch('searchQuery', v => syncFilterToUrl('q', v ? [v] : []))"
+      >
       <div class="mb-6">
         <div class="flex items-center justify-between mb-4">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">タイマー一覧</h1>
@@ -424,7 +431,63 @@ app.get('/', async (c) => {
           </div>
         </div>
       )}
+      </div>
     </div>,
+  );
+});
+
+app.get('/projects/:id', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const projectRepo = new D1ProjectRepository(c.env.DB);
+  const projectId = c.req.param('id');
+  const project = await projectRepo.getById(projectId);
+  if (!project) return c.notFound();
+
+  const projectTimers = await repo.getByProjectId(projectId);
+  const allProjects = await projectRepo.getAll();
+  const now = new Date();
+
+  const sortParam = c.req.query('sort') ?? 'urgency';
+  const sortMode: SortMode = isValidSortMode(sortParam) ? sortParam : 'urgency';
+  const sortedTimers = [...projectTimers].sort((a, b) => compareTimers(a, b, sortMode, now));
+
+  const urgencyMap = Object.fromEntries(
+    projectTimers.map(t => [t.id, getUrgencyLevel(t, now)])
+  );
+
+  return c.render(
+    <div class="flex flex-col md:flex-row gap-6">
+      <Sidebar projects={allProjects} currentProjectId={projectId} />
+      <div class="flex-1 min-w-0">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{project.name}</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">タイマー {sortedTimers.length} 件</p>
+          </div>
+          <div class="flex gap-2">
+            <form method="post" action={`/api/projects/${project.id}`}>
+              <input type="hidden" name="_method" value="delete" />
+              <button type="submit" class="rounded-lg border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20" {...{ 'onclick': "return confirm('このプロジェクトを削除してもよろしいですか？タイマーは未分類に移動されます。')" }}>
+                削除
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          {sortedTimers.length === 0 ? (
+            <div class="rounded-lg border border-dashed border-gray-300 p-12 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              このプロジェクトにはタイマーがありません
+            </div>
+          ) : sortedTimers.map((timer) => (
+            <div data-timer-card>
+              <TimerListItem timer={timer} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    { title: project.name },
   );
 });
 
@@ -432,7 +495,9 @@ app.get('/timers/new', async (c) => {
   const repo = new D1TimerRepository(c.env.DB);
   const timers = await repo.getAll({ includeArchived: true });
   const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
-  return c.render(<TimerForm allTags={allTags} />, { title: '新規作成' });
+  const projectRepo = new D1ProjectRepository(c.env.DB);
+  const allProjects = await projectRepo.getAll();
+  return c.render(<TimerForm allTags={allTags} allProjects={allProjects} />, { title: '新規作成' });
 });
 
 app.get('/timers/:id/edit', async (c) => {
@@ -447,7 +512,9 @@ app.get('/timers/:id/edit', async (c) => {
   }
   const timers = await repo.getAll({ includeArchived: true });
   const allTags = Array.from(new Set(timers.flatMap(t => t.tags || [])));
-  return c.render(<TimerForm timer={timer} allTags={allTags} />, { title: '編集' });
+  const projectRepo = new D1ProjectRepository(c.env.DB);
+  const allProjects = await projectRepo.getAll();
+  return c.render(<TimerForm timer={timer} allTags={allTags} allProjects={allProjects} />, { title: '編集' });
 });
 
 // --- API ---
@@ -460,14 +527,15 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
     ? body.tags.split(',').map(t => t.trim()).filter(t => t.length > 0)
     : undefined;
   const priority = body.priority ? Number(body.priority) : undefined;
+  const projectId = body.projectId || undefined;
 
   switch (type) {
     case 'countdown':
-      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags, priority };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags, priority, projectId };
     case 'elapsed':
-      return { name, type, startDate: datetimeLocalToISO(body.startDate), tags, priority };
+      return { name, type, startDate: datetimeLocalToISO(body.startDate), tags, priority, projectId };
     case 'countdown-elapsed':
-      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags, priority };
+      return { name, type, targetDate: datetimeLocalToISO(body.targetDate), tags, priority, projectId };
     case 'stamina': {
       // Calculate total seconds from minutes and seconds inputs
       const minutes = Number(body.recoveryIntervalMinutes) || 0;
@@ -483,6 +551,7 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
         lastUpdatedAt: new Date().toISOString(),
         tags,
         priority,
+        projectId,
       };
     }
     case 'periodic-increment':
@@ -496,6 +565,7 @@ function parseFormToInput(body: Record<string, string>): CreateTimerInput {
         lastUpdatedAt: new Date().toISOString(),
         tags,
         priority,
+        projectId,
       };
     default:
       throw new Error(`Unknown type: ${type}`);
@@ -644,6 +714,50 @@ app.post('/api/timers/:id/unarchive', async (c) => {
   } catch {
     return c.body(null, 404);
   }
+  return c.body(null, 200);
+});
+
+// --- Project API ---
+
+app.post('/api/projects', async (c) => {
+  const projectRepo = new D1ProjectRepository(c.env.DB);
+  const body = await c.req.parseBody() as Record<string, string>;
+
+  const result = createProjectSchema.safeParse({ name: body.name });
+  if (!result.success) return c.redirect('/');
+
+  await projectRepo.create({ name: body.name });
+  return c.redirect('/');
+});
+
+app.post('/api/projects/:id', async (c) => {
+  const projectRepo = new D1ProjectRepository(c.env.DB);
+  const body = await c.req.parseBody() as Record<string, string>;
+  const projectId = c.req.param('id');
+
+  if (body._method === 'delete') {
+    await projectRepo.delete(projectId);
+    return c.redirect('/');
+  }
+
+  if (body._method === 'put') {
+    const result = createProjectSchema.safeParse({ name: body.name });
+    if (!result.success) return c.redirect(`/projects/${projectId}`);
+    await projectRepo.update(projectId, { name: body.name });
+    return c.redirect(`/projects/${projectId}`);
+  }
+
+  return c.notFound();
+});
+
+app.post('/api/timers/:id/project', async (c) => {
+  const repo = new D1TimerRepository(c.env.DB);
+  const timer = await repo.getById(c.req.param('id'));
+  if (!timer) return c.body(null, 404);
+
+  const body = await c.req.parseBody() as Record<string, string>;
+  const projectId = body.projectId || null;
+  await repo.updateProject(timer.id, projectId);
   return c.body(null, 200);
 });
 

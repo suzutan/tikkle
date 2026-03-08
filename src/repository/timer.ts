@@ -1,4 +1,4 @@
-import { eq, desc, isNull, isNotNull } from 'drizzle-orm';
+import { eq, desc, isNull, isNotNull, and } from 'drizzle-orm';
 import { drizzle, DrizzleD1Database } from 'drizzle-orm/d1';
 import { timers } from '../db/schema';
 import type { Timer, CreateTimerInput, UpdateTimerInput } from '../domain/timer/types';
@@ -12,6 +12,7 @@ export function toTimer(row: TimerRow): Timer {
     name: row.name,
     tags: row.tags ? JSON.parse(row.tags) : undefined,
     priority: row.priority ?? 4,
+    projectId: row.projectId ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt ?? undefined,
@@ -56,6 +57,7 @@ export function toInsertValues(input: CreateTimerInput, id: string, now: string)
     type: input.type,
     tags: input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : null,
     priority: input.priority ?? 4,
+    projectId: input.projectId ?? null,
     createdAt: now,
     updatedAt: now
   };
@@ -180,6 +182,18 @@ export class D1TimerRepository {
     const now = new Date().toISOString();
     await this.db.update(timers).set({ archivedAt: now }).where(eq(timers.id, id));
     return (await this.getById(id))!;
+  }
+
+  async getByProjectId(projectId: string): Promise<Timer[]> {
+    const rows = await this.db.select().from(timers)
+      .where(and(eq(timers.projectId, projectId), isNull(timers.archivedAt)))
+      .orderBy(desc(timers.createdAt));
+    return rows.map(toTimer);
+  }
+
+  async updateProject(id: string, projectId: string | null): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ projectId, updatedAt: now }).where(eq(timers.id, id));
   }
 
   async updatePriority(id: string, priority: number): Promise<void> {
