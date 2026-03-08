@@ -72,6 +72,10 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 migrations apply tikkle-db-preview --remote
 
+      - name: Use preview D1 for PR deployment
+        if: github.event_name == 'pull_request'
+        run: sed -i "s/${{ env.D1_PRODUCTION_ID }}/${{ env.D1_PREVIEW_ID }}/" wrangler.toml
+
       - name: Deploy to Cloudflare Pages
         id: deploy
         uses: cloudflare/wrangler-action@v3
