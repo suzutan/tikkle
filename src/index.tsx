@@ -26,6 +26,16 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+app.onError((err, c) => {
+  console.error('Unhandled error:', err.message, err.stack);
+  return c.text(`Error: ${err.message}`, 500);
+});
+
+app.get('/health', (c) => {
+  const hasDB = !!c.env.DB;
+  return c.json({ ok: true, hasDB, bindings: Object.keys(c.env) });
+});
+
 app.use(renderer);
 
 // --- Pages ---
