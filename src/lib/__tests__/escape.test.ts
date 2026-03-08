@@ -13,7 +13,7 @@ describe('escapeForAlpineAttr', () => {
     expect(result).toBe("it\\'s a test");
   });
 
-  test('ダブルクォートをエスケープする', () => {
+  test('ダブルクォートはそのまま保持する（hono/jsx が HTML エンコードを行う）', () => {
     // Given
     const input = 'say "hello"';
 
@@ -21,7 +21,7 @@ describe('escapeForAlpineAttr', () => {
     const result = escapeForAlpineAttr(input);
 
     // Then
-    expect(result).toBe('say &quot;hello&quot;');
+    expect(result).toBe('say "hello"');
   });
 
   test('バックスラッシュをエスケープする', () => {

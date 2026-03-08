@@ -1,12 +1,12 @@
 /**
- * Alpine.js の x-data 属性に埋め込むユーザーデータのエスケープ。
- * シングルクォート囲みの属性値で安全に使える文字列を返す。
+ * Alpine.js の属性に埋め込むユーザーデータのエスケープ。
+ * hono/jsx が属性値の HTML エンコード（" → &quot;）を自動で行うため、
+ * ここでは JS 文字列として壊れない変換のみ行う。
  */
 export function escapeForAlpineAttr(value: string): string {
   return value
     .replace(/\\/g, '\\\\')       // バックスラッシュ
     .replace(/'/g, "\\'")          // シングルクォート
-    .replace(/"/g, '&quot;')       // ダブルクォート
     .replace(/<\//g, '<\\/')       // </script> 等のタグ閉じ
     .replace(/\n/g, '\\n')         // 改行
     .replace(/\r/g, '\\r')         // キャリッジリターン
