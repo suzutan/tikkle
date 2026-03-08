@@ -8,7 +8,7 @@ import type { PriorityLevel } from '../domain/timer/priority';
 
 const TIMER_TYPES = Object.keys(TIMER_TYPE_LABELS) as Array<keyof typeof TIMER_TYPE_LABELS>;
 
-export function TimerForm({ timer, errors, allTags, allProjects }: { timer?: Timer; errors?: string[]; allTags?: string[]; allProjects?: Project[] }) {
+export function TimerForm({ timer, errors, allTags, allProjects, preSelectedProjectId }: { timer?: Timer; errors?: string[]; allTags?: string[]; allProjects?: Project[]; preSelectedProjectId?: string }) {
   const isEdit = !!timer;
   const action = isEdit ? `/api/timers/${timer!.id}` : '/api/timers';
   const method = isEdit ? 'put' : 'post';
@@ -122,7 +122,7 @@ export function TimerForm({ timer, errors, allTags, allProjects }: { timer?: Tim
             >
               <option value="">なし</option>
               {allProjects.map((project) => (
-                <option value={project.id} selected={timer?.projectId === project.id}>{project.name}</option>
+                <option value={project.id} selected={timer?.projectId === project.id || (!timer && preSelectedProjectId === project.id)}>{project.name}</option>
               ))}
             </select>
           </div>
