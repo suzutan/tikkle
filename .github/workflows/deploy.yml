@@ -78,7 +78,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=tikkle
+          command: pages deploy dist --project-name=tikkle --branch=${{ github.head_ref || github.ref_name }}
         continue-on-error: true
 
       - name: Retry Deploy to Cloudflare Pages (if failed)
@@ -88,7 +88,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=tikkle
+          command: pages deploy dist --project-name=tikkle --branch=${{ github.head_ref || github.ref_name }}
 
       - name: Comment preview URL on PR
         if: github.event_name == 'pull_request'
