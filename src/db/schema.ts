@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 
 export const timers = sqliteTable('timers', {
   id: text('id').primaryKey(),
@@ -25,4 +25,21 @@ export const timers = sqliteTable('timers', {
   scheduleTimes: text('schedule_times'), // JSON array
   // archive
   archivedAt: text('archived_at'),
+  // priority: 1=緊急, 2=高, 3=中, 4=なし
+  priority: integer('priority').notNull().default(4),
+  // project
+  projectId: text('project_id'),
+  // manual sort order (fractional indexing)
+  rank: real('rank'),
+}, (table) => [
+  index('idx_timers_project_id').on(table.projectId),
+  index('idx_timers_project_rank').on(table.projectId, table.rank),
+]);
+
+export const projects = sqliteTable('projects', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
 });

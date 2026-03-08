@@ -8,6 +8,7 @@ function createTimer(): CountdownTimer {
     name: 'Test Timer',
     type: 'countdown',
     targetDate: '2099-01-01T00:00:00.000Z',
+    priority: 4,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
   };
