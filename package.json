@@ -16,7 +16,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply tikkle-db --remote"
   },
   "dependencies": {
-    "drizzle-orm": "0.38.4",
+    "drizzle-orm": "0.45.2",
     "hono": "4.12.9",
     "zod": "3.25.76"
   },
