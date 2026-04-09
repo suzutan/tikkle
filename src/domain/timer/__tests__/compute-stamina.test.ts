@@ -12,6 +12,7 @@ function createStaminaTimer(overrides: {
     id: 'timer-1',
     name: 'Test Stamina',
     type: 'stamina',
+    priority: 4,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     ...overrides,
@@ -203,6 +204,7 @@ describe('computeStamina', () => {
       recoveryIntervalMinutes: 7, // This should be ignored
       recoveryIntervalSeconds: 432, // 7分12秒
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -227,6 +229,7 @@ describe('computeStamina', () => {
       recoveryIntervalMinutes: 5, // これは無視される
       recoveryIntervalSeconds: 300, // 5分 = 300秒
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -250,6 +253,7 @@ describe('computeStamina', () => {
       recoveryIntervalMinutes: 5,
       recoveryIntervalSeconds: undefined, // 明示的に undefined
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -275,6 +279,7 @@ describe('computeStamina', () => {
       recoveryIntervalMinutes: 7,
       recoveryIntervalSeconds: 432, // 7分12秒
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -302,6 +307,7 @@ describe('computeStamina', () => {
       recoveryIntervalMinutes: 7,
       recoveryIntervalSeconds: 432, // 7分12秒
       lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };

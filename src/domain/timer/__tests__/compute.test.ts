@@ -18,6 +18,7 @@ describe('computeTimerState', () => {
       name: 'Countdown',
       type: 'countdown',
       targetDate: '2025-12-31T23:59:59.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -36,6 +37,7 @@ describe('computeTimerState', () => {
       name: 'Elapsed',
       type: 'elapsed',
       startDate: '2025-01-01T00:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -54,6 +56,7 @@ describe('computeTimerState', () => {
       name: 'Countdown-Elapsed',
       type: 'countdown-elapsed',
       targetDate: '2025-12-31T23:59:59.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -75,6 +78,7 @@ describe('computeTimerState', () => {
       maxValue: 200,
       recoveryIntervalMinutes: 5,
       lastUpdatedAt: '2025-06-15T11:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
@@ -97,6 +101,7 @@ describe('computeTimerState', () => {
       incrementAmount: 3,
       scheduleTimes: ['09:00', '21:00'],
       lastUpdatedAt: '2025-06-15T08:00:00.000Z',
+      priority: 4,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };

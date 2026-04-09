@@ -1,6 +1,7 @@
 import { computeTimerState } from '../domain/timer/compute';
 import { formatDuration, formatFraction, formatDateTime } from '../domain/timer/format';
 import { checkNotification } from '../domain/timer/notification';
+import { calculateRank } from '../domain/timer/rank';
 import type { Timer, TimerState } from '../domain/timer/types';
 
 interface TimerDisplayData {
@@ -164,6 +165,55 @@ window.syncFilterToUrl = function (key: string, values: string[]): void {
   }
   const qs = params.toString();
   history.replaceState(null, '', qs ? `${location.pathname}?${qs}` : location.pathname);
+};
+
+// Sortable drag-and-drop
+declare global {
+  interface Window {
+    Sortable: any;
+    timerSortable: () => { init(): void };
+  }
+}
+
+window.timerSortable = function (): { init(): void } {
+  return {
+    init() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sort') !== 'manual') return;
+
+      const container = document.getElementById('timer-list');
+      if (!container || !window.Sortable) return;
+
+      window.Sortable.create(container, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'opacity-30',
+        onEnd(evt: any) {
+          const item = evt.item as HTMLElement;
+          const timerId = item.dataset.timerId;
+          if (!timerId) return;
+
+          const items = Array.from(container.children) as HTMLElement[];
+          const newIndex = items.indexOf(item);
+
+          const prevItem = newIndex > 0 ? items[newIndex - 1] : null;
+          const nextItem = newIndex < items.length - 1 ? items[newIndex + 1] : null;
+
+          const prevRank = prevItem?.dataset.rank ? Number(prevItem.dataset.rank) : null;
+          const nextRank = nextItem?.dataset.rank ? Number(nextItem.dataset.rank) : null;
+
+          const newRank = calculateRank(prevRank, nextRank);
+          item.dataset.rank = String(newRank);
+
+          fetch(`/api/timers/${timerId}/rank`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rank: String(newRank) }),
+          });
+        },
+      });
+    },
+  };
 };
 
 // Dark mode management

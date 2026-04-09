@@ -1,0 +1,1 @@
+ALTER TABLE `timers` ADD `priority` integer DEFAULT 4 NOT NULL;

@@ -1,4 +1,4 @@
-import { eq, desc, isNull, isNotNull } from 'drizzle-orm';
+import { eq, desc, isNull, isNotNull, and, sql } from 'drizzle-orm';
 import { drizzle, DrizzleD1Database } from 'drizzle-orm/d1';
 import { timers } from '../db/schema';
 import type { Timer, CreateTimerInput, UpdateTimerInput } from '../domain/timer/types';
@@ -11,6 +11,9 @@ export function toTimer(row: TimerRow): Timer {
     id: row.id,
     name: row.name,
     tags: row.tags ? JSON.parse(row.tags) : undefined,
+    priority: row.priority ?? 4,
+    projectId: row.projectId ?? undefined,
+    rank: row.rank ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt ?? undefined,
@@ -54,6 +57,8 @@ export function toInsertValues(input: CreateTimerInput, id: string, now: string)
     name: input.name,
     type: input.type,
     tags: input.tags && input.tags.length > 0 ? JSON.stringify(input.tags) : null,
+    priority: input.priority ?? 4,
+    projectId: input.projectId ?? null,
     createdAt: now,
     updatedAt: now
   };
@@ -135,6 +140,7 @@ export class D1TimerRepository {
     if (input.tags !== undefined) {
       updateValues.tags = input.tags.length > 0 ? JSON.stringify(input.tags) : null;
     }
+    if (input.priority !== undefined) updateValues.priority = input.priority;
 
     switch (input.type) {
       case 'countdown':
@@ -177,6 +183,39 @@ export class D1TimerRepository {
     const now = new Date().toISOString();
     await this.db.update(timers).set({ archivedAt: now }).where(eq(timers.id, id));
     return (await this.getById(id))!;
+  }
+
+  async getByProjectId(projectId: string): Promise<Timer[]> {
+    const rows = await this.db.select().from(timers)
+      .where(and(eq(timers.projectId, projectId), isNull(timers.archivedAt)))
+      .orderBy(desc(timers.createdAt));
+    return rows.map(toTimer);
+  }
+
+  async updateProject(id: string, projectId: string | null): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ projectId, updatedAt: now }).where(eq(timers.id, id));
+  }
+
+  async updatePriority(id: string, priority: number): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ priority, updatedAt: now }).where(eq(timers.id, id));
+  }
+
+  async updateRank(id: string, rank: number): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.update(timers).set({ rank, updatedAt: now }).where(eq(timers.id, id));
+  }
+
+  async getMaxRank(projectId?: string | null): Promise<number | null> {
+    const conditions = projectId
+      ? and(eq(timers.projectId, projectId), isNull(timers.archivedAt))
+      : isNull(timers.archivedAt);
+    const result = await this.db
+      .select({ maxRank: sql<number | null>`MAX(${timers.rank})` })
+      .from(timers)
+      .where(conditions);
+    return result[0]?.maxRank ?? null;
   }
 
   async unarchive(id: string): Promise<Timer> {
