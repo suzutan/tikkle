@@ -9,22 +9,27 @@ const isCurrentWithinMax = (data: {
 
 const CURRENT_EXCEEDS_MAX_MSG = 'currentValue cannot exceed maxValue';
 
+const priorityField = z.number().int().min(1).max(4).optional();
+
 const countdownTimerBase = z.object({
   name: z.string().min(1),
   type: z.literal('countdown'),
   targetDate: z.string().datetime(),
+  priority: priorityField,
 });
 
 const elapsedTimerBase = z.object({
   name: z.string().min(1),
   type: z.literal('elapsed'),
   startDate: z.string().datetime(),
+  priority: priorityField,
 });
 
 const countdownElapsedTimerBase = z.object({
   name: z.string().min(1),
   type: z.literal('countdown-elapsed'),
   targetDate: z.string().datetime(),
+  priority: priorityField,
 });
 
 const staminaTimerBase = z.object({
@@ -34,6 +39,7 @@ const staminaTimerBase = z.object({
   maxValue: z.number().int().min(1),
   recoveryIntervalMinutes: z.number().positive(),
   lastUpdatedAt: z.string().datetime(),
+  priority: priorityField,
 });
 
 const periodicIncrementTimerBase = z.object({
@@ -44,6 +50,7 @@ const periodicIncrementTimerBase = z.object({
   incrementAmount: z.number().int().min(1),
   scheduleTimes: z.array(z.string().regex(SCHEDULE_TIME_PATTERN)).min(1),
   lastUpdatedAt: z.string().datetime(),
+  priority: priorityField,
 });
 
 export const countdownTimerSchema = countdownTimerBase;

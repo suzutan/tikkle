@@ -49,6 +49,9 @@ export function buildDuplicateInput(timer: Timer): CreateTimerInput {
   if (timer.tags && timer.tags.length > 0) {
     input.tags = [...timer.tags];
   }
+  if (timer.priority !== undefined && timer.priority !== 4) {
+    input.priority = timer.priority;
+  }
   return input;
 }
 

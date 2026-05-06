@@ -55,6 +55,7 @@ describe('domain/timer barrel file', () => {
         name: 'Test',
         type: 'countdown',
         targetDate: '2025-12-31T23:59:59.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
@@ -103,18 +104,21 @@ describe('domain/timer barrel file', () => {
       const countdown: CountdownTimer = {
         id: 'c', name: 'C', type: 'countdown',
         targetDate: '2025-12-31T23:59:59.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       const elapsed: ElapsedTimer = {
         id: 'e', name: 'E', type: 'elapsed',
         startDate: '2025-01-01T00:00:00.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       const countdownElapsed: CountdownElapsedTimer = {
         id: 'ce', name: 'CE', type: 'countdown-elapsed',
         targetDate: '2025-12-31T23:59:59.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
@@ -122,6 +126,7 @@ describe('domain/timer barrel file', () => {
         id: 's', name: 'S', type: 'stamina',
         currentValue: 50, maxValue: 200, recoveryIntervalMinutes: 5,
         lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
@@ -129,6 +134,7 @@ describe('domain/timer barrel file', () => {
         id: 'p', name: 'P', type: 'periodic-increment',
         currentValue: 50, maxValue: 100, incrementAmount: 3,
         scheduleTimes: ['09:00'], lastUpdatedAt: '2025-06-15T12:00:00.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
@@ -176,6 +182,7 @@ describe('domain/timer barrel file', () => {
       const timer: CountdownTimer = {
         id: 'test', name: 'Test', type: 'countdown',
         targetDate: '2025-06-15T13:00:00.000Z',
+        priority: 4,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };

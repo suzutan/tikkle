@@ -10,6 +10,7 @@ function createCountdownTimer(overrides: {
     name: 'Test Countdown',
     type: 'countdown',
     targetDate: overrides.targetDate,
+    priority: 4,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
   };

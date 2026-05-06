@@ -13,6 +13,7 @@ function makeStamina(currentValue: number, maxValue: number): Timer {
     maxValue,
     recoveryIntervalMinutes: 5,
     lastUpdatedAt: '2026-06-15T00:00:00.000Z',
+    priority: 4,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };
@@ -28,6 +29,7 @@ function makePeriodicIncrement(currentValue: number, maxValue: number): Timer {
     incrementAmount: 10,
     scheduleTimes: ['06:00', '12:00'],
     lastUpdatedAt: '2026-06-15T00:00:00.000Z',
+    priority: 4,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };
@@ -127,6 +129,7 @@ describe('applyQuickAction', () => {
       name: 'Test',
       type: 'countdown',
       targetDate: '2026-12-31T00:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     };

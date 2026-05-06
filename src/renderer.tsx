@@ -15,6 +15,7 @@ export const renderer = jsxRenderer(({ children, title }) => {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
         <script src="https://unpkg.com/htmx.org@2.0.4" />
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" />
         <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" />
         <script src="/static/client.js" />
         <style>{`[x-cloak] { display: none !important; } .font-timer { font-family: 'Share Tech Mono', monospace; font-variant-numeric: tabular-nums; }`}</style>

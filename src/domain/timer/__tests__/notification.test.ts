@@ -8,6 +8,7 @@ describe('checkNotification', () => {
     const timer: Timer = {
       id: 't1', name: 'My Timer', type: 'countdown',
       targetDate: '2026-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const prev: TimerState = { type: 'countdown', remainingMs: 1000, isExpired: false };
@@ -27,6 +28,7 @@ describe('checkNotification', () => {
     const timer: Timer = {
       id: 't1', name: 'My Timer', type: 'countdown',
       targetDate: '2026-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const prev: TimerState = { type: 'countdown', remainingMs: 0, isExpired: true };
@@ -44,6 +46,7 @@ describe('checkNotification', () => {
     const timer: Timer = {
       id: 't2', name: 'Deadline', type: 'countdown-elapsed',
       targetDate: '2026-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const prev: TimerState = { type: 'countdown-elapsed', mode: 'countdown', ms: 1000 };
@@ -63,6 +66,7 @@ describe('checkNotification', () => {
       id: 't3', name: 'Stamina', type: 'stamina',
       currentValue: 100, maxValue: 100, recoveryIntervalMinutes: 5,
       lastUpdatedAt: '2026-06-15T00:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const prev: TimerState = {
@@ -88,6 +92,7 @@ describe('checkNotification', () => {
       id: 't4', name: 'Points', type: 'periodic-increment',
       currentValue: 100, maxValue: 100, incrementAmount: 10,
       scheduleTimes: ['06:00'], lastUpdatedAt: '2026-06-15T00:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const prev: TimerState = {
@@ -112,6 +117,7 @@ describe('checkNotification', () => {
     const timer: Timer = {
       id: 't5', name: 'Elapsed', type: 'elapsed',
       startDate: '2026-01-01T00:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const prev: TimerState = { type: 'elapsed', elapsedMs: 1000, pendingMs: 0 };
@@ -129,6 +135,7 @@ describe('checkNotification', () => {
     const timer: Timer = {
       id: 't1', name: 'My Timer', type: 'countdown',
       targetDate: '2026-06-15T12:00:00.000Z',
+      priority: 4,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     };
     const curr: TimerState = { type: 'countdown', remainingMs: 0, isExpired: true };
